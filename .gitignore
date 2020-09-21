@@ -1,6 +1,9 @@
 # Compiled class file
 *.class
 
+# Java policy for RMI
+*.policy
+
 # Log file
 *.log
 

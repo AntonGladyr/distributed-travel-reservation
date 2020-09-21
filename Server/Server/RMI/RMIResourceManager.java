@@ -19,8 +19,8 @@ import java.rmi.server.UnicastRemoteObject;
 public class RMIResourceManager extends ResourceManager 
 {
 	private static String s_serverName = "Server";
-	//TODO: ADD YOUR GROUP NUMBER TO COMPLETE
-	//private static String s_rmiPrefix = "group_xx_";
+	// group number as unique identifier
+	private static String s_rmiPrefix = "group_03_";
 
 	public static void main(String args[])
 	{
