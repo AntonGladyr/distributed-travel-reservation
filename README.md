@@ -5,7 +5,7 @@ Distributed Systems project for COMP 512, McGill, Fall 2020.
 ## Project Group #3
 
 * `Stacey Beard`:
-* `Melissa Dunn`:
+* `Melissa Dunn`: 260801146
 * `Anton Gladyr`: 260892882
 
 # Usage
