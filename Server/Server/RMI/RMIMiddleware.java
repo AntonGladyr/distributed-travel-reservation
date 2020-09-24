@@ -16,23 +16,18 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 
-public class RMIMiddleware extends ResourceManager 
+public class RMIMiddleware extends Middleware 
 {
 	private static String s_serverName = "Server";
 	// group number as unique identifier
 	private static String s_rmiPrefix = "group_03_";
 
 	public static void main(String args[])
-	{
-		/*if (args.length > 0)
-		{
-			s_serverName = args[0];
-		}*/
-			
+	{	
 		// Create the RMI server entry
 		try {
 			// Create a new Server object
-			RMIResourceManager server = new RMIResourceManager(s_serverName);
+			RMIMiddleware server = new RMIMiddleware(s_serverName, args[0], args[1], args[2]);
 
 			// Dynamically generate the stub (client proxy)
 			IResourceManager resourceManager = (IResourceManager)UnicastRemoteObject.exportObject(server, 0);
@@ -74,8 +69,8 @@ public class RMIMiddleware extends ResourceManager
 		}
 	}
 
-	public RMIMiddleware(String name)
+	public RMIMiddleware(String name, String flightsHost, String carsHost, String roomsHost)
 	{
-		super(name);
+		super(name, flightsHost, carsHost, roomsHost);
 	}
 }

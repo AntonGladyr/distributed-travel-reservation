@@ -6,9 +6,15 @@
 package Server.Common;
 
 import Server.Interface.*;
+import Client.Client;
+import Client.Command;
+import Client.RMIClient;
 
 import java.util.*;
 import java.rmi.RemoteException;
+import java.rmi.ConnectException;
+import java.rmi.ServerException;
+import java.rmi.UnmarshalException;
 import java.io.*;
 
 public class Middleware implements IResourceManager
@@ -16,11 +22,14 @@ public class Middleware implements IResourceManager
 	private RMIClient flightsClient;
 	private RMIClient carsClient;
 	private RMIClient roomsClient;
-
-	private int portNum = 33303;
+	
+	private String flightsHost;
+	private String carsHost;
+	private String roomsHost;
 	private String flightsServerName = "Flights";
 	private String carsServerName = "Cars";
 	private String roomsServerName = "Rooms";
+	private int portNum = 33303;
 	
 	protected String m_name = "";
 	protected RMHashMap m_data = new RMHashMap();
@@ -32,6 +41,9 @@ public class Middleware implements IResourceManager
 		String roomsHost
 	) {
 		m_name = p_name;
+		this.flightsHost = flightsHost;
+		this.carsHost = carsHost;
+		this.roomsHost = roomsHost;
 
 		// Set the security policy
 		if (System.getSecurityManager() == null) {
@@ -40,18 +52,15 @@ public class Middleware implements IResourceManager
 
 		// connect to the flights server
 		flightsClient = new RMIClient();
-		flightsClient.connectServer(flightsHost, portNum, flightsServerName);
-		flightsClient.start();
+		flightsClient.connectServer(flightsHost, portNum, flightsServerName);	
 		
 		// connect to the cars server
 		carsClient = new RMIClient();
-		carsClient.connectServer(carsHost, portNum, carsServerName);
-		carsClient.start();
+		carsClient.connectServer(carsHost, portNum, carsServerName);	
 
 		// connect to the rooms server
 		roomsClient = new RMIClient();	
-		roomsClient.connectServer(roomsHost, portNum, roomsServerName);
-		roomsClient.start();
+		roomsClient.connectServer(roomsHost, portNum, roomsServerName);	
 	}
 
 	// Reads a data item
@@ -180,12 +189,41 @@ public class Middleware implements IResourceManager
 	// NOTE: if flightPrice <= 0 and the flight already exists, it maintains its current price
 	public boolean addFlight(int xid, int flightNum, int flightSeats, int flightPrice) throws RemoteException
 	{
-		Trace.info("RM::addFlight(" + xid + ", " + flightNum + ", " + flightSeats + ", $" + flightPrice + ") called");
+		try {
+			String[] arguments = {
+				"AddFlight",
+				Integer.toString(xid), 
+				Integer.toString(flightNum), 
+				Integer.toString(flightSeats), 
+				Integer.toString(flightPrice)
+			};
+			Command cmd = Command.fromString("AddFlight");
+			
+			try {
+				flightsClient.execute(cmd, new Vector<String>(Arrays.asList(arguments)));
+			}
+			catch (ConnectException e) {
+				flightsClient.connectServer(flightsHost, portNum, flightsServerName);
+				flightsClient.execute(cmd, new Vector<String>(Arrays.asList(arguments)));
+			}
+		}
+		catch (IllegalArgumentException|ServerException e) {
+			System.err.println((char)27 + "[31;1mCommand exception: " + (char)27 + "[0m" + e.getLocalizedMessage());
+		}
+		catch (ConnectException|UnmarshalException e) {
+			System.err.println((char)27 + "[31;1mCommand exception: " + (char)27 + "[0mConnection to server lost");
+		}
+		catch (Exception e) {
+			System.err.println((char)27 + "[31;1mCommand exception: " + (char)27 + "[0mUncaught exception");
+			e.printStackTrace();
+		}
+				
+		/*Trace.info("RM::addFlight(" + xid + ", " + flightNum + ", " + flightSeats + ", $" + flightPrice + ") called");
 		if (flightsClient.m_resourceManager.addFlight(xid, flightNum, flightSeats, flightPrice)) {
 			System.out.println("Flight added");
 		} else {
 			System.out.println("Flight could not be added");
-		}
+		}*/
 		return true;
 	}
 
