@@ -1,4 +1,4 @@
-all: java.policy compile-client
+all: java.policy compile-client 
 
 java.policy: FORCE
 	@echo "Creating client java policy"
@@ -11,10 +11,16 @@ FORCE: ;
 ../Server/RMIInterface.jar: ../Server/Server/Interface/IResourceManager.java
 	make -C ../Server/ RMIInterface.jar
 
+Client.jar: Client/*.java
+	@echo "Compiling Client .jar"
+	make compile-client java.policy
+	jar cvf Client.jar Client/*.class java.policy
+
 compile-client: ../Server/RMIInterface.jar
-	javac -cp ../Server/RMIInterface.jar Client/*.java
+	javac -cp ../Server/RMIInterface.jar Client/*.java	
 
 clean:
 	rm -f Client/*.class
 	rm -f ../Server/RMIInterface.jar
 	rm -f java.policy
+	rm -f Client.jar
