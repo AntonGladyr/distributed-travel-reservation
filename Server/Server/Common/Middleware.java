@@ -6,30 +6,31 @@
 package Server.Common;
 
 import Server.Interface.*;
-import Client.Client;
-import Client.Command;
-import Client.RMIClient;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
 
 import java.util.*;
 import java.rmi.RemoteException;
 import java.rmi.ConnectException;
 import java.rmi.ServerException;
 import java.rmi.UnmarshalException;
+import java.rmi.NotBoundException;
 import java.io.*;
 
 public class Middleware implements IResourceManager
-{
-	private RMIClient flightsClient;
-	private RMIClient carsClient;
-	private RMIClient roomsClient;
+{	
+	private IResourceManager m_resourceManager;
+
+	// group number as unique identifier
+	private final String s_rmiPrefix = "group_03_";
 	
 	private String flightsHost;
 	private String carsHost;
 	private String roomsHost;
-	private String flightsServerName = "Flights";
-	private String carsServerName = "Cars";
-	private String roomsServerName = "Rooms";
-	private int portNum = 33303;
+	private final String flightsServerName = "Flights";
+	private final String carsServerName = "Cars";
+	private final String roomsServerName = "Rooms";
+	private final int portNum = 33303;
 	
 	protected String m_name = "";
 	protected RMHashMap m_data = new RMHashMap();
@@ -49,18 +50,32 @@ public class Middleware implements IResourceManager
 		if (System.getSecurityManager() == null) {
 			System.setSecurityManager(new SecurityManager());
 		}
-
-		// connect to the flights server
-		flightsClient = new RMIClient();
-		flightsClient.connectServer(flightsHost, portNum, flightsServerName);	
-		
-		// connect to the cars server
-		carsClient = new RMIClient();
-		carsClient.connectServer(carsHost, portNum, carsServerName);	
-
-		// connect to the rooms server
-		roomsClient = new RMIClient();	
-		roomsClient.connectServer(roomsHost, portNum, roomsServerName);	
+	}
+	
+	private void connectServer(String server, int port, String name) {
+		try {
+			boolean first = true;
+			while (true) {
+				try {
+					Registry registry = LocateRegistry.getRegistry(server, port);
+					m_resourceManager = (IResourceManager)registry.lookup(s_rmiPrefix + name);
+					Trace.info("Connected to '" + name + "' server [" + server + ":" + port + "/" + s_rmiPrefix + name + "]");
+					break;
+				}
+				catch (NotBoundException|RemoteException e) {
+					if (first) {
+						Trace.warn("Waiting for '" + name + "' server [" + server + ":" + port + "/" + s_rmiPrefix + name + "]");
+						first = false;
+					}
+				}
+				Thread.sleep(500);
+			}
+		}
+		catch (Exception e) {
+			Trace.error((char)27 + "[31;1mServer exception: " + (char)27 + "[0mUncaught exception");
+			e.printStackTrace();
+			System.exit(1);
+		}	
 	}
 
 	// Reads a data item
@@ -188,149 +203,100 @@ public class Middleware implements IResourceManager
 	// Create a new flight, or add seats to existing flight
 	// NOTE: if flightPrice <= 0 and the flight already exists, it maintains its current price
 	public boolean addFlight(int xid, int flightNum, int flightSeats, int flightPrice) throws RemoteException
-	{
-		try {
-			String[] arguments = {
-				"AddFlight",
-				Integer.toString(xid), 
-				Integer.toString(flightNum), 
-				Integer.toString(flightSeats), 
-				Integer.toString(flightPrice)
-			};
-			Command cmd = Command.fromString("AddFlight");
-			
-			try {
-				flightsClient.execute(cmd, new Vector<String>(Arrays.asList(arguments)));
-			}
-			catch (ConnectException e) {
-				flightsClient.connectServer(flightsHost, portNum, flightsServerName);
-				flightsClient.execute(cmd, new Vector<String>(Arrays.asList(arguments)));
-			}
-		}
-		catch (IllegalArgumentException|ServerException e) {
-			System.err.println((char)27 + "[31;1mCommand exception: " + (char)27 + "[0m" + e.getLocalizedMessage());
-		}
-		catch (ConnectException|UnmarshalException e) {
-			System.err.println((char)27 + "[31;1mCommand exception: " + (char)27 + "[0mConnection to server lost");
-		}
-		catch (Exception e) {
-			System.err.println((char)27 + "[31;1mCommand exception: " + (char)27 + "[0mUncaught exception");
-			e.printStackTrace();
-		}
-				
-		/*Trace.info("RM::addFlight(" + xid + ", " + flightNum + ", " + flightSeats + ", $" + flightPrice + ") called");
-		if (flightsClient.m_resourceManager.addFlight(xid, flightNum, flightSeats, flightPrice)) {
-			System.out.println("Flight added");
-		} else {
-			System.out.println("Flight could not be added");
-		}*/
-		return true;
+	{	
+		connectServer(flightsHost, portNum, flightsServerName); 
+		Trace.info("RM::addFlight(" + xid + ", " + flightNum + ", " + flightSeats + ", $" + flightPrice + ") called");
+		return m_resourceManager.addFlight(xid, flightNum, flightSeats, flightPrice);
 	}
 
 	// Create a new car location or add cars to an existing location
 	// NOTE: if price <= 0 and the location already exists, it maintains its current price
 	public boolean addCars(int xid, String location, int count, int price) throws RemoteException
 	{
+		connectServer(carsHost, portNum, carsServerName);
 		Trace.info("RM::addCars(" + xid + ", " + location + ", " + count + ", $" + price + ") called");
-		Car curObj = (Car)readData(xid, Car.getKey(location));
-		if (curObj == null)
-		{
-			// Car location doesn't exist yet, add it
-			Car newObj = new Car(location, count, price);
-			writeData(xid, newObj.getKey(), newObj);
-			Trace.info("RM::addCars(" + xid + ") created new location " + location + ", count=" + count + ", price=$" + price);
-		}
-		else
-		{
-			// Add count to existing car location and update price if greater than zero
-			curObj.setCount(curObj.getCount() + count);
-			if (price > 0)
-			{
-				curObj.setPrice(price);
-			}
-			writeData(xid, curObj.getKey(), curObj);
-			Trace.info("RM::addCars(" + xid + ") modified existing location " + location + ", count=" + curObj.getCount() + ", price=$" + price);
-		}
-		return true;
+		return m_resourceManager.addCars(xid, location, count, price);
 	}
 
 	// Create a new room location or add rooms to an existing location
 	// NOTE: if price <= 0 and the room location already exists, it maintains its current price
 	public boolean addRooms(int xid, String location, int count, int price) throws RemoteException
 	{
+		connectServer(roomsHost, portNum, roomsServerName);
 		Trace.info("RM::addRooms(" + xid + ", " + location + ", " + count + ", $" + price + ") called");
-		Room curObj = (Room)readData(xid, Room.getKey(location));
-		if (curObj == null)
-		{
-			// Room location doesn't exist yet, add it
-			Room newObj = new Room(location, count, price);
-			writeData(xid, newObj.getKey(), newObj);
-			Trace.info("RM::addRooms(" + xid + ") created new room location " + location + ", count=" + count + ", price=$" + price);
-		} else {
-			// Add count to existing object and update price if greater than zero
-			curObj.setCount(curObj.getCount() + count);
-			if (price > 0)
-			{
-				curObj.setPrice(price);
-			}
-			writeData(xid, curObj.getKey(), curObj);
-			Trace.info("RM::addRooms(" + xid + ") modified existing location " + location + ", count=" + curObj.getCount() + ", price=$" + price);
-		}
-		return true;
+		return m_resourceManager.addRooms(xid, location, count, price);
 	}
 
 	// Deletes flight
 	public boolean deleteFlight(int xid, int flightNum) throws RemoteException
 	{
-		return deleteItem(xid, Flight.getKey(flightNum));
+		connectServer(flightsHost, portNum, flightsServerName);
+		Trace.info("RM::deleteFlight(" + xid + ", " + flightNum + ") called");
+		return m_resourceManager.deleteFlight(xid, flightNum);
 	}
 
 	// Delete cars at a location
 	public boolean deleteCars(int xid, String location) throws RemoteException
 	{
-		return deleteItem(xid, Car.getKey(location));
+		connectServer(carsHost, portNum, carsServerName);
+		Trace.info("RM::deleteCars(" + xid + ", " + location + ") called");
+		return m_resourceManager.deleteCars(xid, location);
 	}
 
 	// Delete rooms at a location
 	public boolean deleteRooms(int xid, String location) throws RemoteException
 	{
-		return deleteItem(xid, Room.getKey(location));
+		connectServer(roomsHost, portNum, roomsServerName);
+		Trace.info("RM::deleteRooms(" + xid + ", " + location + ") called");
+		return m_resourceManager.deleteRooms(xid, location);
 	}
 
 	// Returns the number of empty seats in this flight
 	public int queryFlight(int xid, int flightNum) throws RemoteException
 	{
-		return queryNum(xid, Flight.getKey(flightNum));
+		connectServer(flightsHost, portNum, flightsServerName);
+		Trace.info("RM::queryFlight(" + xid + ", " + flightNum + ") called");
+		return m_resourceManager.queryFlight(xid, flightNum);
 	}
 
 	// Returns the number of cars available at a location
 	public int queryCars(int xid, String location) throws RemoteException
 	{
-		return queryNum(xid, Car.getKey(location));
+		connectServer(carsHost, portNum, carsServerName);
+		Trace.info("RM::queryCars(" + xid + ", " + location + ") called");
+		return m_resourceManager.queryCars(xid, location);
 	}
 
 	// Returns the amount of rooms available at a location
 	public int queryRooms(int xid, String location) throws RemoteException
 	{
-		return queryNum(xid, Room.getKey(location));
+		connectServer(roomsHost, portNum, roomsServerName);
+		Trace.info("RM::queryRooms(" + xid + ", " + location + ") called");
+		return m_resourceManager.queryRooms(xid, location);
 	}
 
 	// Returns price of a seat in this flight
 	public int queryFlightPrice(int xid, int flightNum) throws RemoteException
 	{
-		return queryPrice(xid, Flight.getKey(flightNum));
+		connectServer(flightsHost, portNum, flightsServerName);
+		Trace.info("RM::queryFlightPrice(" + xid + ", " + flightNum + ") called");
+		return m_resourceManager.queryFlightPrice(xid, flightNum);
 	}
 
 	// Returns price of cars at this location
 	public int queryCarsPrice(int xid, String location) throws RemoteException
 	{
-		return queryPrice(xid, Car.getKey(location));
+		connectServer(carsHost, portNum, carsServerName);
+		Trace.info("RM::queryCarsPrice(" + xid + ", " + location + ") called");
+		return m_resourceManager.queryCarsPrice(xid, location);
 	}
 
 	// Returns room price at this location
 	public int queryRoomsPrice(int xid, String location) throws RemoteException
 	{
-		return queryPrice(xid, Room.getKey(location));
+		connectServer(roomsHost, portNum, roomsServerName);
+		Trace.info("RM::queryRoomsPrice(" + xid + ", " + location + ") called");
+		return m_resourceManager.queryRoomsPrice(xid, location);
 	}
 
 	public String queryCustomerInfo(int xid, int customerID) throws RemoteException
