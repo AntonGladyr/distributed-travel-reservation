@@ -5,6 +5,9 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 
+import Server.Interface.MessageType;
+import Server.Interface.TCPMessage;
+
 public class TCPConnectionHandler implements Runnable {
 	
 	private Socket clientSocket;

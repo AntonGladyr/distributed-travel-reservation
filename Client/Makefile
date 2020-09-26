@@ -11,7 +11,7 @@ FORCE: ;
 ../Server/RMIInterface.jar: ../Server/Server/Interface/IResourceManager.java
 	make -C ../Server/ RMIInterface.jar
 	
-../Server/TCPInterface.jar: ../Server/Server/Interface/IResourceManager.java
+../Server/TCPInterface.jar: ../Server/Server/Interface/IResourceManager.java ../Server/Server/Interface/TCPMessage.java ../Server/Server/Interface/MessageType.java
 	make -C ../Server/ TCPInterface.jar
 
 compile-client: ../Server/RMIInterface.jar ../Server/TCPInterface.jar
