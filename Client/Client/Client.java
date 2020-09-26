@@ -336,7 +336,7 @@ public abstract class Client
 				int customerID = toInt(arguments.elementAt(2));
 				int flightNum = toInt(arguments.elementAt(3));
 
-				if (m_resourceManager.reserveFlight(id, customerID, flightNum)) {
+				if (m_resourceManager.reserveFlight(id, customerID, flightNum) != -1) {
 					System.out.println("Flight Reserved");
 				} else {
 					System.out.println("Flight could not be reserved");
@@ -354,7 +354,7 @@ public abstract class Client
 				int customerID = toInt(arguments.elementAt(2));
 				String location = arguments.elementAt(3);
 
-				if (m_resourceManager.reserveCar(id, customerID, location)) {
+				if (m_resourceManager.reserveCar(id, customerID, location) != -1) {
 					System.out.println("Car Reserved");
 				} else {
 					System.out.println("Car could not be reserved");
@@ -372,7 +372,7 @@ public abstract class Client
 				int customerID = toInt(arguments.elementAt(2));
 				String location = arguments.elementAt(3);
 
-				if (m_resourceManager.reserveRoom(id, customerID, location)) {
+				if (m_resourceManager.reserveRoom(id, customerID, location) != -1) {
 					System.out.println("Room Reserved");
 				} else {
 					System.out.println("Room could not be reserved");

@@ -105,99 +105,19 @@ public class Middleware implements IResourceManager
 			m_data.remove(key);
 		}
 	}
-
-	// Deletes the encar item
-	protected boolean deleteItem(int xid, String key)
+	
+	// Check if customer exists
+	protected Customer getCustomer(int xid, int customerID, String key, String location)
 	{
-		Trace.info("RM::deleteItem(" + xid + ", " + key + ") called");
-		ReservableItem curObj = (ReservableItem)readData(xid, key);
-		// Check if there is such an item in the storage
-		if (curObj == null)
-		{
-			Trace.warn("RM::deleteItem(" + xid + ", " + key + ") failed--item doesn't exist");
-			return false;
-		}
-		else
-		{
-			if (curObj.getReserved() == 0)
-			{
-				removeData(xid, curObj.getKey());
-				Trace.info("RM::deleteItem(" + xid + ", " + key + ") item deleted");
-				return true;
-			}
-			else
-			{
-				Trace.info("RM::deleteItem(" + xid + ", " + key + ") item can't be deleted because some customers have reserved it");
-				return false;
-			}
-		}
-	}
-
-	// Query the number of available seats/rooms/cars
-	protected int queryNum(int xid, String key)
-	{
-		Trace.info("RM::queryNum(" + xid + ", " + key + ") called");
-		ReservableItem curObj = (ReservableItem)readData(xid, key);
-		int value = 0;  
-		if (curObj != null)
-		{
-			value = curObj.getCount();
-		}
-		Trace.info("RM::queryNum(" + xid + ", " + key + ") returns count=" + value);
-		return value;
-	}    
-
-	// Query the price of an item
-	protected int queryPrice(int xid, String key)
-	{
-		Trace.info("RM::queryPrice(" + xid + ", " + key + ") called");
-		ReservableItem curObj = (ReservableItem)readData(xid, key);
-		int value = 0; 
-		if (curObj != null)
-		{
-			value = curObj.getPrice();
-		}
-		Trace.info("RM::queryPrice(" + xid + ", " + key + ") returns cost=$" + value);
-		return value;        
-	}
-
-	// Reserve an item
-	protected boolean reserveItem(int xid, int customerID, String key, String location)
-	{
-		Trace.info("RM::reserveItem(" + xid + ", customer=" + customerID + ", " + key + ", " + location + ") called" );        
+		Trace.info("RM::getCustomer(" + xid + ", customer=" + customerID + ", " + key + ", " + location + ") called" );
 		// Read customer object if it exists (and read lock it)
 		Customer customer = (Customer)readData(xid, Customer.getKey(customerID));
 		if (customer == null)
 		{
-			Trace.warn("RM::reserveItem(" + xid + ", " + customerID + ", " + key + ", " + location + ")  failed--customer doesn't exist");
-			return false;
-		} 
-
-		// Check if the item is available
-		ReservableItem item = (ReservableItem)readData(xid, key);
-		if (item == null)
-		{
-			Trace.warn("RM::reserveItem(" + xid + ", " + customerID + ", " + key + ", " + location + ") failed--item doesn't exist");
-			return false;
+			Trace.warn("RM::getCustomer(" + xid + ", " + customerID + ", " + key + ", " + location + ")  failed--customer doesn't exist");	
 		}
-		else if (item.getCount() == 0)
-		{
-			Trace.warn("RM::reserveItem(" + xid + ", " + customerID + ", " + key + ", " + location + ") failed--No more items");
-			return false;
-		}
-		else
-		{            
-			customer.reserve(key, location, item.getPrice());        
-			writeData(xid, customer.getKey(), customer);
 
-			// Decrease the number of available items in the storage
-			item.setCount(item.getCount() - 1);
-			item.setReserved(item.getReserved() + 1);
-			writeData(xid, item.getKey(), item);
-
-			Trace.info("RM::reserveItem(" + xid + ", " + customerID + ", " + key + ", " + location + ") succeeded");
-			return true;
-		}        
+		return customer;
 	}
 
 	// Create a new flight, or add seats to existing flight
@@ -380,21 +300,66 @@ public class Middleware implements IResourceManager
 	}
 
 	// Adds flight reservation to this customer
-	public boolean reserveFlight(int xid, int customerID, int flightNum) throws RemoteException
+	public int reserveFlight(int xid, int customerID, int flightNum) throws RemoteException
 	{
-		return reserveItem(xid, customerID, Flight.getKey(flightNum), String.valueOf(flightNum));
+		Customer customer = getCustomer(xid, customerID, Flight.getKey(flightNum), String.valueOf(flightNum));
+		// if customer does not exist, return false	
+		if (customer == null) return -1;
+		
+		connectServer(flightsHost, portNum, flightsServerName);
+		Trace.info("RM::reserveFlight(" + xid + ", " + customerID + ", " + flightNum + ") called");
+		
+		// if a flight is successfully reserved
+		int flightPrice = m_resourceManager.reserveFlight(xid, customerID, flightNum);
+		if (flightPrice != -1) {
+			customer.reserve(Flight.getKey(flightNum), String.valueOf(flightNum), flightPrice);
+			writeData(xid, customer.getKey(), customer);
+			return 0;
+		}
+
+		return -1;
 	}
 
 	// Adds car reservation to this customer
-	public boolean reserveCar(int xid, int customerID, String location) throws RemoteException
+	public int reserveCar(int xid, int customerID, String location) throws RemoteException
 	{
-		return reserveItem(xid, customerID, Car.getKey(location), location);
+		Customer customer = getCustomer(xid, customerID, Car.getKey(location), location);
+		// if customer does not exist, return false
+		if (customer == null) return -1;
+		
+		connectServer(carsHost, portNum, carsServerName);
+		Trace.info("RM::reserveCar(" + xid + ", " + customerID + ", " + location + ") called");
+		
+		// if a car is successfully reserved
+		int carPrice = m_resourceManager.reserveCar(xid, customerID, location);
+		if (carPrice != -1) {
+			customer.reserve(Car.getKey(location), location, carPrice);
+			writeData(xid, customer.getKey(), customer);
+			return 0;
+		}
+		
+		return -1;
 	}
 
 	// Adds room reservation to this customer
-	public boolean reserveRoom(int xid, int customerID, String location) throws RemoteException
+	public int reserveRoom(int xid, int customerID, String location) throws RemoteException
 	{
-		return reserveItem(xid, customerID, Room.getKey(location), location);
+		Customer customer = getCustomer(xid, customerID, Car.getKey(location), location);
+		// if customer does not exist, return false
+		if (customer == null) return -1;
+		
+		connectServer(roomsHost, portNum, roomsServerName);
+		Trace.info("RM::reserveRoom(" + xid + ", " + customerID + ", " + location + ") called");
+		
+		// if a room is successfully reserved
+		int roomPrice = m_resourceManager.reserveRoom(xid, customerID, location);
+		if (roomPrice != -1) {
+			customer.reserve(Room.getKey(location), location, roomPrice);
+			writeData(xid, customer.getKey(), customer);
+			return 0;
+		}
+
+		return -1;
 	}
 
 	// Reserve bundle 

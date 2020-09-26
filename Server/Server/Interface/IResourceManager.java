@@ -2,6 +2,7 @@ package Server.Interface;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
+import Server.Common.Customer;
 
 import java.util.*;
 
@@ -174,7 +175,7 @@ public interface IResourceManager extends Remote
      *
      * @return Success
      */
-    public boolean reserveFlight(int id, int customerID, int flightNumber) 
+    public int reserveFlight(int id, int customerID, int flightNumber) 
 	throws RemoteException; 
 
     /**
@@ -182,15 +183,15 @@ public interface IResourceManager extends Remote
      *
      * @return Success
      */
-    public boolean reserveCar(int id, int customerID, String location) 
+    public int reserveCar(int id, int customerID, String location)
 	throws RemoteException; 
 
-    /**
+     /**
      * Reserve a room at this location.
      *
      * @return Success
      */
-    public boolean reserveRoom(int id, int customerID, String location) 
+    public int reserveRoom(int id, int customerID, String location)
 	throws RemoteException; 
 
     /**
