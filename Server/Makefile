@@ -16,7 +16,7 @@ RMIInterface.jar: Server/Interface/IResourceManager.java
 TCPInterface.jar: Server/Interface/IResourceManager.java Server/Interface/TCPMessage.java Server/Interface/MessageType.java
 	@echo "Compiling TCP server interface"
 	javac Server/Interface/IResourceManager.java Server/Interface/TCPMessage.java Server/Interface/MessageType.java
-	jar cvf TCPInterface.jar Server/Interface/IResourceManager.class Server/Interface/TCPMessage.java Server/Interface/MessageType.java
+	jar cvf TCPInterface.jar Server/Interface/IResourceManager.class Server/Interface/TCPMessage.class Server/Interface/MessageType.class
 
 compile-server-rmi: Server/RMI/*.java Server/Interface/IResourceManager.java Server/Common/*.java
 	javac Server/RMI/*.java Server/Interface/IResourceManager.java Server/Common/*.java
