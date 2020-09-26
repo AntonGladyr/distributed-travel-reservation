@@ -1,7 +1,11 @@
 // TODO move to common location to avoid duplicate code
 package Server.TCP;
 
-public class TCPMessage {
+import java.io.Serializable;
+
+public class TCPMessage  implements Serializable {
+
+	private static final long serialVersionUID = 1L;
 
 	public MessageType type;
 	
