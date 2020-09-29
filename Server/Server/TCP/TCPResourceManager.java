@@ -36,7 +36,7 @@ public class TCPResourceManager extends ResourceManager
 		// Create a server socket to listen for incoming connections
 		try {
 			// Create a new Server object
-			TCPResourceManager server = new TCPResourceManager(s_serverName);
+			TCPResourceManager resourceManager = new TCPResourceManager(s_serverName);
 			
 			// Set up a server socket to listen for connections
 			serverSocket = new ServerSocket(port);
@@ -47,7 +47,7 @@ public class TCPResourceManager extends ResourceManager
 			while (true) {
 				// Receive a client connection request and dispatch it to a new thread
 				Socket clientSocket = serverSocket.accept();
-				Runnable clientThread = new TCPConnectionHandler(clientSocket);
+				Runnable clientThread = new TCPConnectionHandler(clientSocket, resourceManager);
 				threadPool.execute(clientThread);
 			}
 		}

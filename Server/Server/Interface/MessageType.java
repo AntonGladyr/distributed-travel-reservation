@@ -23,4 +23,5 @@ public enum MessageType {
     RESERVE_ROOM,
     BUNDLE,
     GET_NAME,
+    ERROR,
 }

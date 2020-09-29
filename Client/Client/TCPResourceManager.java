@@ -21,7 +21,8 @@ public class TCPResourceManager implements IResourceManager {
 	private int port;
 	
 	private String communicationError = "Communication error; no response received.";
-	
+	private String errorResponse = "Issue on the server; error response recieved.";
+
 	// Constructor
 	public TCPResourceManager(String server, int port) {
 		this.server = server;
@@ -79,6 +80,7 @@ public class TCPResourceManager implements IResourceManager {
 		TCPMessage response = sendMessageWithErrorHandling(message);
 		
 		if (response == null) throw new RemoteException(communicationError);
+		else if (response.type == MessageType.ERROR) throw new RemoteException(errorResponse);
 		else return response.booleanResult;
 		
 	}
