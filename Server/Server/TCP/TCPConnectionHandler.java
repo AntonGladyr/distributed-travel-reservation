@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.rmi.RemoteException;
 
 import Server.Common.ResourceManager;
 import Server.Interface.MessageType;
@@ -40,20 +41,23 @@ public class TCPConnectionHandler implements Runnable {
 		// Read and handle the message sent by the client
 		try {
 			ObjectInputStream input = new ObjectInputStream(clientSocket.getInputStream());
-			TCPMessage incomingMessage = (TCPMessage) input.readObject();
+			TCPMessage request = (TCPMessage) input.readObject();
 			
-			if (incomingMessage != null) {
+			if (request != null) {
 				
-				switch (incomingMessage.type) {
+				switch (request.type) {
 				case HELLO:
 					response = handleHello();
 					break;
+				case ADD_FLIGHT:
+					response = handleAddFlight(request);
+					break;
 				default:
-					throw new IOException("Unrecognized TCPMessage.type: " + incomingMessage.type);
+					throw new IOException("Unrecognized TCPMessage.type: " + request.type);
 				}
 			}
 			else {
-				throw new IOException("Invalid TCPMessage: " + incomingMessage);
+				throw new IOException("Invalid TCPMessage: " + request);
 			}
 		}
 		catch (Exception e) {
@@ -101,5 +105,14 @@ public class TCPConnectionHandler implements Runnable {
 		
 		// Send a hello message in response
 		return new TCPMessage(MessageType.HELLO);
+	}
+	
+	// Handles messages of type "ADD_FLIGHT"
+	private TCPMessage handleAddFlight(TCPMessage r) throws RemoteException {
+		System.out.println("Received ADD_FLIGHT request from [" + hostName + ":" + port + "]");
+		
+		r.booleanResult = resourceManager.addFlight(r.id, r.flightNum, r.flightSeats, r.flightPrice);
+		
+		return r;
 	}
 }

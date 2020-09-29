@@ -13,10 +13,15 @@ public class TCPMessage implements Serializable {
 	// Message request parameters (different parameters used depending on the message type)
 	public int id;
 	public int flightNum;
-	public int price; // price, flightPrice
+	public int flightSeats;
+	public int flightPrice;
 	public String location;
-	public int amount; // flightSeats, numCars, numRooms
-	public int cid; // cid, customerID
+	public int numCars;
+	public int price;
+	public int numRooms;
+	public int cid;
+	public int customerID;
+	public int flightNumber;
 	public Vector<String> flightNumbers;
 	public boolean car;
 	public boolean room;
@@ -37,8 +42,8 @@ public class TCPMessage implements Serializable {
 		TCPMessage message = new TCPMessage(MessageType.ADD_FLIGHT);
 		message.id = id;
 		message.flightNum = flightNum;
-		message.amount = flightSeats;
-		message.price = flightPrice;
+		message.flightSeats = flightSeats;
+		message.flightPrice = flightPrice;
 		return message;
 	}
 
