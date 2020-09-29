@@ -3,8 +3,6 @@ package Client;
 import Server.Interface.*;
 
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.net.Socket;
 
 /*
@@ -62,6 +60,14 @@ public class TCPClient extends Client
 	 */
 	public void connectServer(String server, int port, String name)
 	{
+		// Create a new TCP Resource Manager to handle Client requests made in the interactive interface
+		TCPResourceManager manager = new TCPResourceManager(server, port);
+		m_resourceManager = (IResourceManager) manager;
+		
+		// Create a hello message
+		TCPMessage outgoingMessage = new TCPMessage(MessageType.HELLO);
+		
+		// Create a socket
 		Socket clientSocket = null;
 		
 		try {
@@ -70,31 +76,17 @@ public class TCPClient extends Client
 				try {
 					clientSocket = new Socket(server, port);
 					
-					// Create a hello message
-					TCPMessage outgoingMessage = new TCPMessage(MessageType.HELLO);
-					
 					// Send the hello message to the server to test the connection
 					// This is done to establish whether further communication will be possible (to catch errors early)
-					ObjectOutputStream output = new ObjectOutputStream(clientSocket.getOutputStream());
-					output.writeObject(outgoingMessage);
-					
-					// Receive a response from the server
-					ObjectInputStream input = new ObjectInputStream(clientSocket.getInputStream());
-					TCPMessage incomingMessage = null;
-					
-					incomingMessage = (TCPMessage) input.readObject();
+					TCPMessage response = manager.sendMessage(clientSocket, outgoingMessage);
 					
 					// Check that the response is valid
-					if (incomingMessage != null & incomingMessage.type == MessageType.HELLO) {
-						
-						// Create a new TCP Resource Manager to handle Client requests made in the interactive interface
-						m_resourceManager = (IResourceManager) new TCPResourceManager(server, port);
-
+					if (response != null & response.type == MessageType.HELLO) {
 						System.out.println("Connected to '" + name + "' server using TCP [" + server + ":" + port + "]");
 						break;
 					}
 					else {
-						throw new IOException(String.valueOf(incomingMessage));
+						throw new ClassNotFoundException(String.valueOf(response));
 					}
 				}
 				catch (ClassNotFoundException e) {

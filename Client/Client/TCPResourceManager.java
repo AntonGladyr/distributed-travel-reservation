@@ -1,9 +1,13 @@
 package Client;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.Socket;
 import java.rmi.RemoteException;
 import java.util.Vector;
 
-import Server.Interface.IResourceManager;
+import Server.Interface.*;
 
 /*
  * Uses TCP sockets to implement the same remote commands as those offered using RMI.
@@ -16,16 +20,67 @@ public class TCPResourceManager implements IResourceManager {
 	private String server;
 	private int port;
 	
+	private String communicationError = "Communication error; no response received.";
+	
+	// Constructor
 	public TCPResourceManager(String server, int port) {
 		this.server = server;
 		this.port = port;
 		System.out.println("Created TCPResourceManager for [" + this.server + ":" + this.port + "]");
 	}
+	
+	// Sends a message to the server on the specified port using sockets
+	// Receives and returns a message in response
+	public TCPMessage sendMessage(Socket clientSocket, TCPMessage outgoingMessage) throws IOException, ClassNotFoundException {
+		
+		// Send the message to the server
+		ObjectOutputStream output = new ObjectOutputStream(clientSocket.getOutputStream());
+		output.writeObject(outgoingMessage);
+		
+		// Receive a response from the server
+		ObjectInputStream input = new ObjectInputStream(clientSocket.getInputStream());
+		
+		return (TCPMessage) input.readObject();
+	}
+	
+	// Sends the message. If any errors occur, they are caught, printed, and null is returned.
+	public TCPMessage sendMessageWithErrorHandling(TCPMessage outgoingMessage) {
+		
+		Socket clientSocket = null;
+		
+		try {
+			clientSocket = new Socket(server, port);
+			return sendMessage(clientSocket, outgoingMessage);
+		}
+		catch (ClassNotFoundException e) {
+			System.err.println("Failed to establish connection with the server; invalid response received: " + e.getMessage());
+		}
+		catch (Exception e) {
+			System.err.println("Failed to establish connection with the server: " + e.getMessage());
+		}
+		finally {
+			if (clientSocket != null) {
+				try {
+					clientSocket.close();
+				}
+				catch (IOException e) {
+					System.err.println("Error closing client socket connection to server [" + server + ":" + port + "]");
+				}
+			}
+		}
+		return null;
+	}
 
 	@Override
 	public boolean addFlight(int id, int flightNum, int flightSeats, int flightPrice) throws RemoteException {
-		// TODO Auto-generated method stub
-		throw new RemoteException("Not implemented yet.");
+
+		TCPMessage message = TCPMessage.newAddFlight(id, flightNum, flightSeats, flightPrice);
+		
+		TCPMessage response = sendMessageWithErrorHandling(message);
+		
+		if (response == null) throw new RemoteException(communicationError);
+		else return response.booleanResult;
+		
 	}
 
 	@Override
