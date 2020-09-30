@@ -370,6 +370,56 @@ public class ResourceManager implements IResourceManager
 	{
 		return false;
 	}
+	
+	// Check if the flight list is available
+	public boolean checkFlightList(int xid, Vector<String> flightNumbers, String location) throws RemoteException {
+		boolean isAvailable = true;
+		// hashmap to check if we are trying to reserve more seats than avaiable in the same flight	
+		HashMap<Integer, Integer> availableSeatsMap = new HashMap<Integer, Integer>(); // <flight number, number of seats>
+		
+		// iterate through each flight number
+		for (String flightNum : flightNumbers) {
+			int availableSeats = queryNum(xid, Flight.getKey(Integer.parseInt(flightNum)));
+			// return false if there is no available seats
+			if (availableSeats == 0) {
+				isAvailable = false;
+				break;
+			}
+			
+			// if the key is not in the hashmap, add <flight number, number of seats>
+			if (availableSeatsMap.get(Integer.parseInt(flightNum)) == null) {
+				availableSeatsMap.put(Integer.parseInt(flightNum), availableSeats);
+			}
+			else { // otherwise decrease the number of seats
+				int seats = availableSeatsMap.get(Integer.parseInt(flightNum));
+				availableSeatsMap.put(Integer.parseInt(flightNum), seats - 1);
+			}	
+		}
+
+		
+		// iterate through the whole hashmap. If there is a negative value, a flight does not have enough seats
+		for (int value : availableSeatsMap.keySet()) {
+			if (value < 0) {
+				isAvailable = false;
+				break;
+			}
+		}
+		
+		return isAvailable;
+	}
+
+	public boolean reserveFlightList(int xid, int customerId, Vector<String> flightNumbers, String location) throws RemoteException {
+		boolean isReserved = true;
+		// iterate through each flight number and make a reservation
+		for (String flightNum : flightNumbers) {
+			if (reserveFlight(xid, customerId, Integer.parseInt(flightNum)) == -1) {
+				isReserved = false;
+				break;
+			}
+		}
+
+		return isReserved;
+	}
 
 	public String getName() throws RemoteException
 	{

@@ -203,6 +203,21 @@ public interface IResourceManager extends Remote
 	throws RemoteException; 
 
     /**
+     * Check if the flight list is available
+     *
+     * @return Success
+     */
+     public boolean checkFlightList(int xid, Vector<String> flightNumbers, String location)
+	throws RemoteException;
+
+    /**
+     *
+     * @return Success
+     */
+     public boolean reserveFlightList(int xid, int customerId, Vector<String> flightNumbers, String location)
+	throws RemoteException;
+
+    /**
      * Convenience for probing the resource manager.
      *
      * @return Name
