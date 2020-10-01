@@ -211,10 +211,19 @@ public interface IResourceManager extends Remote
 	throws RemoteException;
 
     /**
+     * Reserve flight list. Return a list of prices for corresponding flights
      *
      * @return Success
      */
-     public boolean reserveFlightList(int xid, int customerId, Vector<String> flightNumbers, String location)
+     public Vector<Integer> reserveFlightList(int xid, int customerId, Vector<String> flightNumbers, String location)
+	throws RemoteException;
+
+    /**
+     * Cancel item reservations
+     *
+     * @return Success
+     */
+     public boolean cancelItemReservations(int xid, HashMap<String, Integer> reservedKeysMap)
 	throws RemoteException;
 
     /**

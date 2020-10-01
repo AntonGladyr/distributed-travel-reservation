@@ -23,13 +23,15 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
+import java.util.concurrent.CancellationException;
 
 
 public class Middleware implements IResourceManager
 {		
 	// group number as unique identifier
 	private static final String s_rmiPrefix = "group_03_";
-	private static final int MAX_T = 3;
+	private static final int MAX_THREADS = 3;
 	private static final int WAIT_RESPONSE = 3;
 	
 	private String flightsHost;
@@ -333,8 +335,7 @@ public class Middleware implements IResourceManager
 			return false;
 		}
 	}
-	
-	//TODO: send requests to the resource managers to change the item counters and withdraw reservations
+		
 	public boolean deleteCustomer(int xid, int customerID) throws RemoteException
 	{
 		Trace.info("RM::deleteCustomer(" + xid + ", " + customerID + ") called");
@@ -348,17 +349,19 @@ public class Middleware implements IResourceManager
 		{            
 			// Increase the reserved numbers of all reservable items which the customer reserved. 
  			RMHashMap reservations = customer.getReservations();
+			// hashmap for storing keys and number of reservations
+			HashMap<String, Integer> reservationsMap = new HashMap<String, Integer>(); //<key, count>
+			//Vector<String> reservedKeyList;
+			
 			for (String reservedKey : reservations.keySet())
 			{        
 				ReservedItem reserveditem = customer.getReservedItem(reservedKey);
-				Trace.info("RM::deleteCustomer(" + xid + ", " + customerID + ") has reserved " + reserveditem.getKey() + " " +  reserveditem.getCount() +  " times");
-				ReservableItem item  = (ReservableItem)readData(xid, reserveditem.getKey());
-				Trace.info("RM::deleteCustomer(" + xid + ", " + customerID + ") has reserved " + reserveditem.getKey() + " which is reserved " +  item.getReserved() +  " times and is still available " + item.getCount() + " times");
-				item.setReserved(item.getReserved() - reserveditem.getCount());
-				item.setCount(item.getCount() + reserveditem.getCount());
-				writeData(xid, item.getKey(), item);
+				reservationsMap.put(reserveditem.getKey(), reserveditem.getCount());	
 			}
-
+			
+			// cancel item reservations in all resource managers. Return false if failed
+			if (cancelItemSet(xid, reservationsMap) == false) return false;
+			
 			// Remove the customer from the storage
 			removeData(xid, customer.getKey());
 			Trace.info("RM::deleteCustomer(" + xid + ", " + customerID + ") succeeded");
@@ -389,7 +392,7 @@ public class Middleware implements IResourceManager
 		return -1;
 	}
 
-	// Adds car reservation to this customer
+	// Adds car reservation to this customer	
 	public int reserveCar(int xid, int customerID, String location) throws RemoteException
 	{
 		Trace.info("RM::reserveCar(" + xid + ", " + customerID + ", " + location + ") called");
@@ -399,7 +402,7 @@ public class Middleware implements IResourceManager
 
 		// return -1 if there is no connection to the resource manager
 		IResourceManager m_resourceManager = connectServer(carsHost, portNum, carsServerName);
-		if (m_resourceManager == null) return -1;	
+		if (m_resourceManager == null) return -1;
 		
 		// if a car is successfully reserved return 0, otherwise -1
 		int carPrice = m_resourceManager.reserveCar(xid, customerID, location);
@@ -447,11 +450,7 @@ public class Middleware implements IResourceManager
 		Trace.info("RM::bundle(" + xid + ", " + customerId + ", " +
 					   flightNumbers.toString() + "," + location + ", " + car + ", " + room + ") called");
 		if (flightNumbers.isEmpty()) return false;
-		
-		// if customer does not exist, return false
-		Customer customer = getCustomer(xid, customerId);
-		if (customer == null) return false;
-		
+			
 		boolean availabe = checkItemsAvailability(xid, customerId, flightNumbers, location, car, room);
 		if (availabe) return reserveItemsBunlde(xid, customerId, flightNumbers, location, car, room);
 		return false;
@@ -461,9 +460,19 @@ public class Middleware implements IResourceManager
 		return false;
 	}
 
-	public boolean reserveFlightList(int xid, int customerId, Vector<String> flightNumbers, String location) throws RemoteException {
+	public Vector<Integer> reserveFlightList(
+		int xid,
+		int customerId,
+		Vector<String> flightNumbers,
+		String location
+	) throws RemoteException {
+		return null;
+	}
+
+	public boolean cancelItemReservations(int xid, HashMap<String, Integer> reservedKeysMap) throws RemoteException {
 		return false;
 	}
+
 
 	public String getName() throws RemoteException
 	{
@@ -485,8 +494,8 @@ public class Middleware implements IResourceManager
 		boolean carResult = false;
 		boolean roomResult = false;
 
-		ExecutorService executor = Executors.newFixedThreadPool(MAX_T);
-
+		// threads executor
+		ExecutorService executor = Executors.newFixedThreadPool(MAX_THREADS);
 		
 		// send asynchronous requests to the resource managers
 		
@@ -504,6 +513,7 @@ public class Middleware implements IResourceManager
 				flightsResult = flightsFuture.get(WAIT_RESPONSE, TimeUnit.SECONDS);
 			}
 			catch (Exception e) {
+				flightsFuture.cancel(true);
 				return false;
 			}
 			
@@ -527,6 +537,7 @@ public class Middleware implements IResourceManager
 				carResult = carFuture.get(WAIT_RESPONSE, TimeUnit.SECONDS);
 			}
 			catch (Exception e) {
+				carFuture.cancel(true);
 				return false;
 			}
 			
@@ -551,6 +562,7 @@ public class Middleware implements IResourceManager
 				roomResult = roomFuture.get(WAIT_RESPONSE, TimeUnit.SECONDS);
 			}
 			catch(Exception e) {
+				roomFuture.cancel(true);
 				return false;
 			}
 			
@@ -575,84 +587,154 @@ public class Middleware implements IResourceManager
 		boolean car, 
 		boolean room
 	) throws RemoteException {
-		boolean flightsResult = false;
-		boolean carResult = false;
-		boolean roomResult = false;
-			
-		ExecutorService executor = Executors.newFixedThreadPool(MAX_T);
+		boolean flightsResult = true;
+		boolean carResult = true;
+		boolean roomResult = true;
+
+		// threads executor
+		ExecutorService executor = Executors.newFixedThreadPool(MAX_THREADS);
+		Future<Boolean> flightsFuture = null;
+		Future<Boolean> carFuture = null;
+		Future<Boolean> roomFuture = null;
+	
+		// if customer does not exist, return false
+		Customer customer = getCustomer(xid, customerId);
+		if (customer == null) return false;
 	
 		// check if the vector is empty	
 		if (!flightNumbers.isEmpty()) {	
-			Callable<Boolean> flightsRun = () -> {
+			Callable<Boolean> reserveFlightsCallback = () -> {
 				IResourceManager m_resourceManager = connectServer(flightsHost, portNum, flightsServerName);
 				if (m_resourceManager == null) return false;
-				return m_resourceManager.reserveFlightList(xid, customerId, flightNumbers, location);
+				
+				Vector<Integer> prices = m_resourceManager.reserveFlightList(xid, customerId, flightNumbers, location);
+				if (prices.isEmpty()) return false;				
+
+				for (int i = 0; i < prices.size(); i++) {
+					int flightNum = Integer.parseInt(flightNumbers.get(i));
+					customer.reserve(Flight.getKey(flightNum), String.valueOf(flightNum), prices.get(i));
+					writeData(xid, customer.getKey(), customer);
+				}
+				
+				return true;
 			};
 
 			// create thread for reserving list flight
-			Future<Boolean> flightsFuture = executor.submit(flightsRun);	
-			try {
-				// limit the thread response time by 3 seconds
-				flightsResult = flightsFuture.get(WAIT_RESPONSE, TimeUnit.SECONDS);
-			}
-			catch(Exception e) {
-			}
-			
-			if (!flightsFuture.isDone()) {
-				flightsFuture.cancel(true);
-				return false;
-			}
+			flightsFuture = executor.submit(reserveFlightsCallback);
 		}	
 		
 		if (car) {	
-			Callable<Boolean> carRun = () -> {
+			Callable<Boolean> reserveCarCallback = () -> {
 				int price = reserveCar(xid, customerId, location);
-				return price >= 0;
+				if (price == -1) return false;
+				
+				customer.reserve(Car.getKey(location), location, price);
+				writeData(xid, customer.getKey(), customer);
+				return true;
 			};
 			
 			// thread for reserving a car at a location
-			Future<Boolean> carFuture = executor.submit(carRun);	
-			try {
-				// limit the thread response time by 3 seconds
-				carResult = carFuture.get(WAIT_RESPONSE, TimeUnit.SECONDS);
-			}
-			catch(Exception e) {
-				return false;
-			}
-			
-			if (!carFuture.isDone()) {
-				carFuture.cancel(true);
-				return false;
-			}
-		}
-		else carResult = true;
+			carFuture = executor.submit(reserveCarCallback);
+		}	
 
 		if (room) {	
-			Callable<Boolean> roomRun = () -> {
+			Callable<Boolean> reserveRoomCallback = () -> {
 				int price = reserveRoom(xid, customerId, location);
-				return price >= 0;	
+				if (price == -1) return false;
+				customer.reserve(Room.getKey(location), location, price);
+				writeData(xid, customer.getKey(), customer);
+				return true;
 			};
 			
-			// thread for reserving a  at a location
-			Future<Boolean> roomFuture = executor.submit(roomRun);
-			try {
-				roomResult = roomFuture.get(WAIT_RESPONSE, TimeUnit.SECONDS);
-			}
-			catch(Exception e) {
-				return false;
-			}
-			
-			if (!roomFuture.isDone()) {
-				roomFuture.cancel(true);
-				return false;
-			}
+			// thread for reserving a room at a location
+			roomFuture = executor.submit(reserveRoomCallback);
 		}
-		else roomResult = true;
-
-		executor.shutdown();
 		
+		// wait for previously submitted tasks to execute, and then terminate the executor
+		executor.shutdown();
+
+		// get the results
+		if (!flightNumbers.isEmpty()) flightsResult = handleThreadResult(flightsFuture);
+		if (car) carResult = handleThreadResult(carFuture);
+		if (room) roomResult = handleThreadResult(roomFuture);
+	
 		return flightsResult && carResult && roomResult;
 	}
+
+	private boolean cancelItemSet(int xid, HashMap<String, Integer> reservationsMap) {
+		// threads executor
+		ExecutorService executor = Executors.newFixedThreadPool(MAX_THREADS);
+		
+		// get the references to the remote objects
+		IResourceManager flightsManager = connectServer(flightsHost, portNum, flightsServerName);
+		if (flightsManager == null) return false;
+		
+		IResourceManager carsManager = connectServer(carsHost, portNum, carsServerName);
+		if (carsManager == null) return false;
+
+		IResourceManager roomsManager = connectServer(roomsHost, portNum, roomsServerName);
+		if (roomsManager == null) return false;
+		
+		// 
+		Callable<Boolean> cancelFlights = () -> {
+			return flightsManager.cancelItemReservations(xid, reservationsMap);
+		};
+		
+		Callable<Boolean> cancelCars = () -> {
+			return carsManager.cancelItemReservations(xid, reservationsMap);
+		};
+		
+		Callable<Boolean> cancelRooms = () -> {
+			return roomsManager.cancelItemReservations(xid, reservationsMap);
+		};
+		
+		// Submit a value-returning tasks for execution in separate threads
+		Future<Boolean> flightsFuture = executor.submit(cancelFlights);
+		Future<Boolean> carsFuture = executor.submit(cancelCars);
+		Future<Boolean> roomsFuture = executor.submit(cancelRooms);
+		
+		// execute threads
+		executor.shutdown();
+		
+		// get the results
+		boolean flightsResult = handleThreadResult(flightsFuture);
+		boolean carResult = handleThreadResult(carsFuture);
+		boolean roomResult = handleThreadResult(roomsFuture);
+
+		return flightsResult && carResult && roomResult;
+	}
+
+	private boolean handleThreadResult(Future<Boolean> itemsFuture) {
+		boolean itemsResult = false;
+		
+		// submit lambda function to a new thread	
+		try {
+			// limit the thread response time by 3 seconds
+			itemsResult = itemsFuture.get(WAIT_RESPONSE, TimeUnit.SECONDS);
+		}
+		catch(TimeoutException e) {
+			Trace.warn("RM::Thread timeout exception");
+			itemsFuture.cancel(true);
+			return false;
+		}
+		catch(InterruptedException e) {
+			Trace.warn("RM::Thread interrupted exception");
+			itemsFuture.cancel(true);
+			return false;
+		}
+		catch(ExecutionException e) {
+			Trace.warn("RM::Thread execution exception");
+			itemsFuture.cancel(true);
+			return false;
+		}
+		catch(CancellationException e) {
+			Trace.warn("RM::Thread cancellation exception");
+			return false;
+		}
+		
+		return itemsResult;
+	}
+
 	
 	private IResourceManager connectServer(String server, int port, String name) {
 		IResourceManager m_resourceManager = null;

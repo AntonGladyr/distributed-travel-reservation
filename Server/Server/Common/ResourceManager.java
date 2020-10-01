@@ -366,13 +366,26 @@ public class ResourceManager implements IResourceManager
 	}
 
 	// Reserve bundle 
-	public boolean bundle(int xid, int customerId, Vector<String> flightNumbers, String location, boolean car, boolean room) throws RemoteException
+	public boolean bundle(
+		int xid,
+		int customerId,
+		Vector<String> flightNumbers,
+		String location,
+		boolean car,
+		boolean room
+	) throws RemoteException
 	{
 		return false;
 	}
 	
 	// Check if the flight list is available
-	public boolean checkFlightList(int xid, Vector<String> flightNumbers, String location) throws RemoteException {
+	public boolean checkFlightList(
+		int xid,
+		Vector<String> flightNumbers,
+		String location
+	) throws RemoteException {
+		Trace.info("RM::checkFlightList(" + xid + ", " + "[flightNumbers]" + ", " + location + ") called");
+
 		boolean isAvailable = true;
 		// hashmap to check if we are trying to reserve more seats than avaiable in the same flight	
 		HashMap<Integer, Integer> availableSeatsMap = new HashMap<Integer, Integer>(); // <flight number, number of seats>
@@ -408,18 +421,46 @@ public class ResourceManager implements IResourceManager
 		return isAvailable;
 	}
 
-	public boolean reserveFlightList(int xid, int customerId, Vector<String> flightNumbers, String location) throws RemoteException {
-		boolean isReserved = true;
+	public Vector<Integer> reserveFlightList(
+		int xid,
+		int customerId,
+		Vector<String> flightNumbers,
+		String location
+	) throws RemoteException {
+		Trace.info("RM::reserveFlightList(" + xid + ", " + customerId + ", " + "[flightNumbers]" + 
+			   ", " + location + ") called");
+	
+		Vector<Integer> flightPrices = new Vector<Integer>();
+		
 		// iterate through each flight number and make a reservation
 		for (String flightNum : flightNumbers) {
-			if (reserveFlight(xid, customerId, Integer.parseInt(flightNum)) == -1) {
-				isReserved = false;
+			int price = reserveFlight(xid, customerId, Integer.parseInt(flightNum));
+			if (price == -1) {
+				flightPrices = null;
 				break;
 			}
-		}
 
-		return isReserved;
+			flightPrices.add(price);
+		}
+		
+		// return a list of prices for corresponding flights
+		return flightPrices;
 	}
+
+	public boolean cancelItemReservations(int xid, HashMap<String, Integer> reservedKeysMap) throws RemoteException {
+		Trace.info("RM::cancelItemReservations(" + xid + ", HashMap<String, Integer>) called");
+		 
+		for (Map.Entry<String, Integer> entry : reservedKeysMap.entrySet()) {
+			ReservableItem item  = (ReservableItem)readData(xid, entry.getKey());
+			if (item == null) continue;
+			item.setReserved(item.getReserved() - entry.getValue());
+			item.setCount(item.getCount() + entry.getValue());
+			writeData(xid, item.getKey(), item);
+		}
+		
+		return true;
+	}
+
 
 	public String getName() throws RemoteException
 	{
