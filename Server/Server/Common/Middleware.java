@@ -22,6 +22,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.CancellationException;
@@ -398,18 +399,19 @@ public class Middleware implements IResourceManager
 		Trace.info("RM::reserveCar(" + xid + ", " + customerID + ", " + location + ") called");
 		Customer customer = getCustomer(xid, customerID);
 		// if customer does not exist, return false
-		if (customer == null) return -1;
-
+		if (customer == null) return -1;	
+		
 		// return -1 if there is no connection to the resource manager
 		IResourceManager m_resourceManager = connectServer(carsHost, portNum, carsServerName);
-		if (m_resourceManager == null) return -1;
+		if (m_resourceManager == null) return -1;	
 		
 		// if a car is successfully reserved return 0, otherwise -1
-		int carPrice = m_resourceManager.reserveCar(xid, customerID, location);
+		int carPrice = m_resourceManager.reserveCar(xid, customerID, location);	
+		
 		if (carPrice != -1) {
 			customer.reserve(Car.getKey(location), location, carPrice);
 			writeData(xid, customer.getKey(), customer);
-			return 0;
+			return carPrice;
 		}
 		
 		return -1;
@@ -432,7 +434,7 @@ public class Middleware implements IResourceManager
 		if (roomPrice != -1) {
 			customer.reserve(Room.getKey(location), location, roomPrice);
 			writeData(xid, customer.getKey(), customer);
-			return 0;
+			return roomPrice;
 		}
 
 		return -1;
@@ -489,91 +491,65 @@ public class Middleware implements IResourceManager
 		boolean car, 
 		boolean room
 	) throws RemoteException {
+		Trace.info("RM::bundle[checkItemsAvailability](" + xid + ", " + customerId + ", " +
+					   flightNumbers.toString() + "," + location + ", " + car + ", " + room + ") called");
+		boolean flightsResult = true;
+		boolean carResult = true;
+		boolean roomResult = true;
 		
-		boolean flightsResult = false;
-		boolean carResult = false;
-		boolean roomResult = false;
-
 		// threads executor
 		ExecutorService executor = Executors.newFixedThreadPool(MAX_THREADS);
+		Future<Boolean> flightsFuture = null;
+		Future<Boolean> carFuture = null;
+		Future<Boolean> roomFuture = null;
+
+		// if customer does not exist, return false
+		Customer customer = getCustomer(xid, customerId);
+		if (customer == null) return false;
 		
 		// send asynchronous requests to the resource managers
 		
 		if (!flightNumbers.isEmpty()) {
-			Callable<Boolean> flightRun = () -> {
+			Callable<Boolean> checkFlightsCallback = () -> {	
+				Trace.info("RM::checkFlightList(" + xid + ", " + flightNumbers + ", " + location + ") called");
 				IResourceManager m_resourceManager = connectServer(flightsHost, portNum, flightsServerName);
-				if (m_resourceManager == null) return false;
+				if (m_resourceManager == null) return false;	
 				return m_resourceManager.checkFlightList(xid, flightNumbers, location);
 			};
 			
 			// create thread for reserving list flight
-			Future<Boolean> flightsFuture = executor.submit(flightRun);
-			try {
-				// limit the thread response time by 3 seconds
-				flightsResult = flightsFuture.get(WAIT_RESPONSE, TimeUnit.SECONDS);
-			}
-			catch (Exception e) {
-				flightsFuture.cancel(true);
-				return false;
-			}
-			
-			if (!flightsFuture.isDone()) {
-				flightsFuture.cancel(true);
-				return false;
-			}
-		}	
+			flightsFuture = executor.submit(checkFlightsCallback);
+		}
 		
-		if (car) {
+		if (car) {	
 			// thread for reserving a car at a location
-			Callable<Boolean> carRun = () -> {
+			Callable<Boolean> checkCarCallback = () -> {
 				int price = queryCars(xid, location);
 				return price >= 0;	
 			};
 			
 			// thread for reserving a car at a location
-			Future<Boolean> carFuture = executor.submit(carRun);
-			try {
-				// limit the thread response time by 3 seconds
-				carResult = carFuture.get(WAIT_RESPONSE, TimeUnit.SECONDS);
-			}
-			catch (Exception e) {
-				carFuture.cancel(true);
-				return false;
-			}
-			
-			if (!carFuture.isDone()) {
-				carFuture.cancel(true);
-				return false;
-			}
+			carFuture = executor.submit(checkCarCallback);
 		}
-		else carResult = true;
 
 		if (room) {
 			// thread for reserving a  at a location
-			Callable<Boolean> roomRun = () -> {
+			Callable<Boolean> checkRoomCallback = () -> {
 				int price = queryRooms(xid, location);
 				return price >= 0;	
 			};
 			
 			// thread for reserving a  at a location
-			Future<Boolean> roomFuture = executor.submit(roomRun);
-			try {
-				// limit the thread response time by 3 seconds
-				roomResult = roomFuture.get(WAIT_RESPONSE, TimeUnit.SECONDS);
-			}
-			catch(Exception e) {
-				roomFuture.cancel(true);
-				return false;
-			}
-			
-			if (!roomFuture.isDone()) {
-				roomFuture.cancel(true);
-				return false;
-			}	
-		}
-		else roomResult = true;
+			roomFuture = executor.submit(checkRoomCallback);
+		}	
 
+		// wait for previously submitted tasks to execute, and then terminate the executor
 		executor.shutdown();
+
+		// get the results
+		if (!flightNumbers.isEmpty()) flightsResult = handleThreadResult(flightsFuture);
+		if (car) carResult = handleThreadResult(carFuture);
+		if (room) roomResult = handleThreadResult(roomFuture);	
 		
 		return flightsResult && carResult && roomResult;
 	}
@@ -587,23 +563,31 @@ public class Middleware implements IResourceManager
 		boolean car, 
 		boolean room
 	) throws RemoteException {
+		Trace.info("RM::bundle[reserveItemsBunlde](" + xid + ", " + customerId + ", " +
+					   flightNumbers.toString() + "," + location + ", " + car + ", " + room + ") called");
+		
 		boolean flightsResult = true;
 		boolean carResult = true;
 		boolean roomResult = true;
 
 		// threads executor
 		ExecutorService executor = Executors.newFixedThreadPool(MAX_THREADS);
-		Future<Boolean> flightsFuture = null;
-		Future<Boolean> carFuture = null;
-		Future<Boolean> roomFuture = null;
-	
+		Future<Boolean> flightsFuture = CompletableFuture.completedFuture(true);
+		Future<Boolean> carFuture = CompletableFuture.completedFuture(true);
+		Future<Boolean> roomFuture = CompletableFuture.completedFuture(true);
+
 		// if customer does not exist, return false
 		Customer customer = getCustomer(xid, customerId);
 		if (customer == null) return false;
+
+		// send asynchronous requests to the resource managers
 	
 		// check if the vector is empty	
 		if (!flightNumbers.isEmpty()) {	
 			Callable<Boolean> reserveFlightsCallback = () -> {
+				Trace.info("RM::reserveFlightList(" + xid + ", " + customerId +
+					   ", " + flightNumbers + ", " + location + ") called");
+				
 				IResourceManager m_resourceManager = connectServer(flightsHost, portNum, flightsServerName);
 				if (m_resourceManager == null) return false;
 				
@@ -621,10 +605,12 @@ public class Middleware implements IResourceManager
 
 			// create thread for reserving list flight
 			flightsFuture = executor.submit(reserveFlightsCallback);
-		}	
+		}
 		
 		if (car) {	
 			Callable<Boolean> reserveCarCallback = () -> {
+				Trace.info("RM::reserveCar(" + xid + ", " + customerId + ", " + location + ") called");
+						
 				int price = reserveCar(xid, customerId, location);
 				if (price == -1) return false;
 				
@@ -635,10 +621,12 @@ public class Middleware implements IResourceManager
 			
 			// thread for reserving a car at a location
 			carFuture = executor.submit(reserveCarCallback);
-		}	
+		}
 
 		if (room) {	
 			Callable<Boolean> reserveRoomCallback = () -> {
+				Trace.info("RM::reserveRoom(" + xid + ", " + customerId + ", " + location + ") called");
+					
 				int price = reserveRoom(xid, customerId, location);
 				if (price == -1) return false;
 				customer.reserve(Room.getKey(location), location, price);
@@ -695,7 +683,7 @@ public class Middleware implements IResourceManager
 		
 		// execute threads
 		executor.shutdown();
-		
+	
 		// get the results
 		boolean flightsResult = handleThreadResult(flightsFuture);
 		boolean carResult = handleThreadResult(carsFuture);
