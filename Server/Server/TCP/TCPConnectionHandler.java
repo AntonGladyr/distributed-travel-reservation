@@ -52,6 +52,9 @@ public class TCPConnectionHandler implements Runnable {
 				case ADD_FLIGHT:
 					response = handleAddFlight(request);
 					break;
+				case ADD_CARS:
+					response = handleAddCars(request);
+					break;
 				default:
 					throw new IOException("Unrecognized TCPMessage.type: " + request.type);
 				}
@@ -113,6 +116,12 @@ public class TCPConnectionHandler implements Runnable {
 		
 		r.booleanResult = resourceManager.addFlight(r.id, r.flightNum, r.flightSeats, r.flightPrice);
 		
+		return r;
+	}
+	private TCPMessage handleAddCars(TCPMessage r) throws RemoteException {
+		System.out.println("Received ADD_CARS request from [" + hostName + ":" + port + "]");
+		
+		r.booleanResult = resourceManager.addCars(r.id, r.location, r.numCars, r.price);
 		return r;
 	}
 }
