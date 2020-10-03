@@ -86,8 +86,8 @@ public class TCPResourceManager implements IResourceManager {
 	}
 
 	@Override
-	public boolean addCars(int id, String location, int numCars, int carPrice) throws RemoteException {
-		TCPMessage message = TCPMessage.newAddCars(id, location, numCars, carPrice);
+	public boolean addCars(int id, String location, int numCars, int price) throws RemoteException {
+		TCPMessage message = TCPMessage.newAddCars(id, location, numCars, price);
 
 		TCPMessage response = sendMessageWithErrorHandling(message);
 		

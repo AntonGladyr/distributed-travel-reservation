@@ -17,10 +17,10 @@ public class TCPMessage implements Serializable {
 	public int flightPrice;
 	public String location;
 	public int numCars;
-	public int carPrice;
+	//public int carPrice;
 	public int price;
 	public int numRooms;
-	public int roomPrice;
+	//public int roomPrice;
 	public int cid;
 	public int customerID;
 	public int flightNumber;
@@ -48,12 +48,12 @@ public class TCPMessage implements Serializable {
 		message.flightPrice = flightPrice;
 		return message;
 	}
-	public static TCPMessage newAddCars(int id, String location, int numCars, int carPrice) {
+	public static TCPMessage newAddCars(int id, String location, int numCars, int price) {
 		TCPMessage message = new TCPMessage(MessageType.ADD_CARS); 
 		message.id = id;
 		message.location = location;
 		message.numCars = numCars;
-		message.carPrice = carPrice;
+		message.price = price;
 		return message;
 	}
 		
