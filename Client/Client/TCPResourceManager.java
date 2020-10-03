@@ -86,9 +86,14 @@ public class TCPResourceManager implements IResourceManager {
 	}
 
 	@Override
-	public boolean addCars(int id, String location, int numCars, int price) throws RemoteException {
-		// TODO Auto-generated method stub
-		throw new RemoteException("Not implemented yet.");
+	public boolean addCars(int id, String location, int numCars, int carPrice) throws RemoteException {
+		TCPMessage message = TCPMessage.newAddCars(id, location, numCars, carPrice);
+
+		TCPMessage response = sendMessageWithErrorHandling(message);
+		
+		if (response == null) throw new RemoteException(communicationError);
+		else if (response.type == MessageType.ERROR) throw new RemoteException(errorResponse);
+		else return response.booleanResult;
 	}
 
 	@Override
