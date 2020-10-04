@@ -753,4 +753,3 @@ public class Middleware implements IResourceManager
 		return m_resourceManager;
 	}
 }
- 
