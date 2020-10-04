@@ -182,6 +182,6 @@ public class TCPMessage implements Serializable {
 //		return message;
 //	}
 
-	}
+	
 	// ========== End of factory methods ==========
 }
