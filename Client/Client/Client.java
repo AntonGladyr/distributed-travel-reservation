@@ -89,7 +89,7 @@ public abstract class Client
 				System.out.println("Adding a new flight [xid=" + arguments.elementAt(1) + "]");
 				System.out.println("-Flight Number: " + arguments.elementAt(2));
 				System.out.println("-Flight Seats: " + arguments.elementAt(3));
-				System.out.println("-Flight Price:,1,mtl,5,500 " + arguments.elementAt(4));
+				System.out.println("-Flight Price: " + arguments.elementAt(4));
 
 				int id = toInt(arguments.elementAt(1));
 				int flightNum = toInt(arguments.elementAt(2));
