@@ -11,9 +11,26 @@ import Server.Interface.TCPMessage;
 
 import Server.Common.Middleware;
 
-public class TCPMiddleware extends Middleware implements Runnable{
+public class TCPMiddleware extends TCPMiddlewareVersion implements Runnable{
 
 
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	public TCPMiddleware(String p_name, String flightsHost, String carsHost, String roomsHost) {
 		super(p_name, flightsHost, carsHost, roomsHost);
 	}
