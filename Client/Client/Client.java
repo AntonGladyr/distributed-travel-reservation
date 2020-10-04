@@ -244,7 +244,12 @@ public abstract class Client
 				int flightNum = toInt(arguments.elementAt(2));
 
 				int seats = m_resourceManager.queryFlight(id, flightNum);
-				System.out.println("Number of seats available: " + seats);
+				if (seats == -1) {
+					System.out.println("Seats could not be queried");	
+				}
+				else {
+					System.out.println("Number of seats available: " + seats);
+				}
 				break;
 			}
 			case QueryCars: {
@@ -257,7 +262,12 @@ public abstract class Client
 				String location = arguments.elementAt(2);
 
 				int numCars = m_resourceManager.queryCars(id, location);
-				System.out.println("Number of cars at this location: " + numCars);
+				if (numCars == -1) {
+					System.out.println("Cars could not be queried");	
+				}
+				else {
+					System.out.println("Number of cars at this location: " + numCars);
+				}
 				break;
 			}
 			case QueryRooms: {
@@ -270,7 +280,12 @@ public abstract class Client
 				String location = arguments.elementAt(2);
 
 				int numRoom = m_resourceManager.queryRooms(id, location);
-				System.out.println("Number of rooms at this location: " + numRoom);
+				if (numRoom == -1) {
+					System.out.println("Rooms could not be queried");
+				}
+				else {
+					System.out.println("Number of rooms at this location: " + numRoom);
+				}
 				break;
 			}
 			case QueryCustomer: {
@@ -296,7 +311,12 @@ public abstract class Client
 				int flightNum = toInt(arguments.elementAt(2));
 
 				int price = m_resourceManager.queryFlightPrice(id, flightNum);
-				System.out.println("Price of a seat: " + price);
+				if (price == -1) {
+					System.out.println("Flight price could not be queried");
+				}
+				else {
+					System.out.println("Price of a seat: " + price);
+				}
 				break;
 			}
 			case QueryCarsPrice: {
@@ -309,7 +329,12 @@ public abstract class Client
 				String location = arguments.elementAt(2);
 
 				int price = m_resourceManager.queryCarsPrice(id, location);
-				System.out.println("Price of cars at this location: " + price);
+				if (price == -1) {
+					System.out.println("Car price could not be queried");
+				}
+				else {
+					System.out.println("Price of cars at this location: " + price);
+				}
 				break;
 			}
 			case QueryRoomsPrice: {
@@ -322,7 +347,12 @@ public abstract class Client
 				String location = arguments.elementAt(2);
 
 				int price = m_resourceManager.queryRoomsPrice(id, location);
-				System.out.println("Price of rooms at this location: " + price);
+				if (price == -1) {
+					System.out.println("Room price could not be queried");
+				}
+				else {
+					System.out.println("Price of rooms at this location: " + price);
+				}
 				break;
 			}
 			case ReserveFlight: {
@@ -336,7 +366,7 @@ public abstract class Client
 				int customerID = toInt(arguments.elementAt(2));
 				int flightNum = toInt(arguments.elementAt(3));
 
-				if (m_resourceManager.reserveFlight(id, customerID, flightNum)) {
+				if (m_resourceManager.reserveFlight(id, customerID, flightNum) != -1) {
 					System.out.println("Flight Reserved");
 				} else {
 					System.out.println("Flight could not be reserved");
@@ -354,7 +384,7 @@ public abstract class Client
 				int customerID = toInt(arguments.elementAt(2));
 				String location = arguments.elementAt(3);
 
-				if (m_resourceManager.reserveCar(id, customerID, location)) {
+				if (m_resourceManager.reserveCar(id, customerID, location) != -1) {
 					System.out.println("Car Reserved");
 				} else {
 					System.out.println("Car could not be reserved");
@@ -372,7 +402,7 @@ public abstract class Client
 				int customerID = toInt(arguments.elementAt(2));
 				String location = arguments.elementAt(3);
 
-				if (m_resourceManager.reserveRoom(id, customerID, location)) {
+				if (m_resourceManager.reserveRoom(id, customerID, location) != -1) {
 					System.out.println("Room Reserved");
 				} else {
 					System.out.println("Room could not be reserved");

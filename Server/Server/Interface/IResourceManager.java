@@ -2,6 +2,7 @@ package Server.Interface;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
+import Server.Common.Customer;
 
 import java.util.*;
 
@@ -174,7 +175,7 @@ public interface IResourceManager extends Remote
      *
      * @return Success
      */
-    public boolean reserveFlight(int id, int customerID, int flightNumber) 
+    public int reserveFlight(int id, int customerID, int flightNumber) 
 	throws RemoteException; 
 
     /**
@@ -182,15 +183,15 @@ public interface IResourceManager extends Remote
      *
      * @return Success
      */
-    public boolean reserveCar(int id, int customerID, String location) 
+    public int reserveCar(int id, int customerID, String location)
 	throws RemoteException; 
 
-    /**
+     /**
      * Reserve a room at this location.
      *
      * @return Success
      */
-    public boolean reserveRoom(int id, int customerID, String location) 
+    public int reserveRoom(int id, int customerID, String location)
 	throws RemoteException; 
 
     /**
@@ -200,6 +201,30 @@ public interface IResourceManager extends Remote
      */
     public boolean bundle(int id, int customerID, Vector<String> flightNumbers, String location, boolean car, boolean room)
 	throws RemoteException; 
+
+    /**
+     * Check if the flight list is available
+     *
+     * @return Success
+     */
+     public boolean checkFlightList(int xid, Vector<String> flightNumbers, String location)
+	throws RemoteException;
+
+    /**
+     * Reserve flight list. Return a list of prices for corresponding flights
+     *
+     * @return Success
+     */
+     public Vector<Integer> reserveFlightList(int xid, int customerId, Vector<String> flightNumbers, String location)
+	throws RemoteException;
+
+    /**
+     * Cancel item reservations
+     *
+     * @return Success
+     */
+     public boolean cancelItemReservations(int xid, HashMap<String, Integer> reservedKeysMap)
+	throws RemoteException;
 
     /**
      * Convenience for probing the resource manager.

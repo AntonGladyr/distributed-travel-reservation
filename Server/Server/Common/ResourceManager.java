@@ -95,7 +95,7 @@ public class ResourceManager implements IResourceManager
 	{
 		Trace.info("RM::queryPrice(" + xid + ", " + key + ") called");
 		ReservableItem curObj = (ReservableItem)readData(xid, key);
-		int value = 0; 
+		int value = -1;
 		if (curObj != null)
 		{
 			value = curObj.getPrice();
@@ -105,41 +105,32 @@ public class ResourceManager implements IResourceManager
 	}
 
 	// Reserve an item
-	protected boolean reserveItem(int xid, int customerID, String key, String location)
+	protected int reserveItem(int xid, int customerID, String key, String location)
 	{
-		Trace.info("RM::reserveItem(" + xid + ", customer=" + customerID + ", " + key + ", " + location + ") called" );        
-		// Read customer object if it exists (and read lock it)
-		Customer customer = (Customer)readData(xid, Customer.getKey(customerID));
-		if (customer == null)
-		{
-			Trace.warn("RM::reserveItem(" + xid + ", " + customerID + ", " + key + ", " + location + ")  failed--customer doesn't exist");
-			return false;
-		} 
-
+		Trace.info("RM::reserveItem(" + xid + ", customer=" + customerID + ", " + key + ", " + location + ") called" );
+		
 		// Check if the item is available
 		ReservableItem item = (ReservableItem)readData(xid, key);
 		if (item == null)
 		{
 			Trace.warn("RM::reserveItem(" + xid + ", " + customerID + ", " + key + ", " + location + ") failed--item doesn't exist");
-			return false;
+			return -1;
+
 		}
 		else if (item.getCount() == 0)
 		{
 			Trace.warn("RM::reserveItem(" + xid + ", " + customerID + ", " + key + ", " + location + ") failed--No more items");
-			return false;
+			return -1;
 		}
 		else
-		{            
-			customer.reserve(key, location, item.getPrice());        
-			writeData(xid, customer.getKey(), customer);
-
+		{
 			// Decrease the number of available items in the storage
 			item.setCount(item.getCount() - 1);
 			item.setReserved(item.getReserved() + 1);
 			writeData(xid, item.getKey(), item);
 
 			Trace.info("RM::reserveItem(" + xid + ", " + customerID + ", " + key + ", " + location + ") succeeded");
-			return true;
+			return queryPrice(xid, key);
 		}        
 	}
 
@@ -354,31 +345,122 @@ public class ResourceManager implements IResourceManager
 			Trace.info("RM::deleteCustomer(" + xid + ", " + customerID + ") succeeded");
 			return true;
 		}
-	}
+	}	
 
 	// Adds flight reservation to this customer
-	public boolean reserveFlight(int xid, int customerID, int flightNum) throws RemoteException
+	public int reserveFlight(int xid, int customerID, int flightNum) throws RemoteException
 	{
 		return reserveItem(xid, customerID, Flight.getKey(flightNum), String.valueOf(flightNum));
 	}
 
 	// Adds car reservation to this customer
-	public boolean reserveCar(int xid, int customerID, String location) throws RemoteException
+	public int reserveCar(int xid, int customerID, String location) throws RemoteException
 	{
 		return reserveItem(xid, customerID, Car.getKey(location), location);
 	}
 
 	// Adds room reservation to this customer
-	public boolean reserveRoom(int xid, int customerID, String location) throws RemoteException
+	public int reserveRoom(int xid, int customerID, String location) throws RemoteException
 	{
 		return reserveItem(xid, customerID, Room.getKey(location), location);
 	}
 
 	// Reserve bundle 
-	public boolean bundle(int xid, int customerId, Vector<String> flightNumbers, String location, boolean car, boolean room) throws RemoteException
+	public boolean bundle(
+		int xid,
+		int customerId,
+		Vector<String> flightNumbers,
+		String location,
+		boolean car,
+		boolean room
+	) throws RemoteException
 	{
 		return false;
 	}
+	
+	// Check if the flight list is available
+	public boolean checkFlightList(
+		int xid,
+		Vector<String> flightNumbers,
+		String location
+	) throws RemoteException {
+		Trace.info("RM::checkFlightList(" + xid + ", " + "[flightNumbers]" + ", " + location + ") called");
+
+		boolean isAvailable = true;
+		// hashmap to check if we are trying to reserve more seats than avaiable in the same flight	
+		HashMap<Integer, Integer> availableSeatsMap = new HashMap<Integer, Integer>(); // <flight number, number of seats>
+		
+		// iterate through each flight number
+		for (String flightNum : flightNumbers) {
+			int availableSeats = queryNum(xid, Flight.getKey(Integer.parseInt(flightNum)));
+			// return false if there is no available seats
+			if (availableSeats == 0) {
+				isAvailable = false;
+				break;
+			}
+			
+			// if the key is not in the hashmap, add <flight number, number of seats>
+			if (availableSeatsMap.get(Integer.parseInt(flightNum)) == null) {
+				availableSeatsMap.put(Integer.parseInt(flightNum), availableSeats);
+			}
+			else { // otherwise decrease the number of seats
+				int seats = availableSeatsMap.get(Integer.parseInt(flightNum));
+				availableSeatsMap.put(Integer.parseInt(flightNum), seats - 1);
+			}	
+		}
+
+		
+		// iterate through the whole hashmap. If there is a negative value, a flight does not have enough seats
+		for (int value : availableSeatsMap.keySet()) {
+			if (value < 0) {
+				isAvailable = false;
+				break;
+			}
+		}
+		
+		return isAvailable;
+	}
+
+	public Vector<Integer> reserveFlightList(
+		int xid,
+		int customerId,
+		Vector<String> flightNumbers,
+		String location
+	) throws RemoteException {
+		Trace.info("RM::reserveFlightList(" + xid + ", " + customerId + ", " + "[flightNumbers]" + 
+			   ", " + location + ") called");
+	
+		Vector<Integer> flightPrices = new Vector<Integer>();
+		
+		// iterate through each flight number and make a reservation
+		for (String flightNum : flightNumbers) {
+			int price = reserveFlight(xid, customerId, Integer.parseInt(flightNum));
+			if (price == -1) {
+				flightPrices = null;
+				break;
+			}
+
+			flightPrices.add(price);
+		}
+		
+		// return a list of prices for corresponding flights
+		return flightPrices;
+	}
+
+	public boolean cancelItemReservations(int xid, HashMap<String, Integer> reservedKeysMap) throws RemoteException {
+		Trace.info("RM::cancelItemReservations(" + xid + ", HashMap<String, Integer>) called");
+		 
+		for (Map.Entry<String, Integer> entry : reservedKeysMap.entrySet()) {
+			ReservableItem item  = (ReservableItem)readData(xid, entry.getKey());
+			if (item == null) continue;
+			item.setReserved(item.getReserved() - entry.getValue());
+			item.setCount(item.getCount() + entry.getValue());
+			writeData(xid, item.getKey(), item);
+		}
+		
+		return true;
+	}
+
 
 	public String getName() throws RemoteException
 	{
