@@ -5,6 +5,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.rmi.RemoteException;
+import java.util.HashMap;
 import java.util.Vector;
 
 import Server.Interface.*;
@@ -299,7 +300,7 @@ public class TCPResourceManager implements IResourceManager {
 	}
 
 	@Override
-	public boolean reserveFlight(int id, int customerID, int flightNumber) throws RemoteException {
+	public int reserveFlight(int id, int customerID, int flightNumber) throws RemoteException {
 		TCPMessage message = TCPMessage.newReserveFlight(id, customerID, flightNumber);
 
 		TCPMessage response = sendMessageWithErrorHandling(message);
@@ -309,11 +310,11 @@ public class TCPResourceManager implements IResourceManager {
 		else if (response.type == MessageType.ERROR)
 			throw new RemoteException(errorResponse);
 		else
-			return response.booleanResult;
+			return response.intResult;
 	}
 
 	@Override
-	public boolean reserveCar(int id, int customerID, String location) throws RemoteException {
+	public int reserveCar(int id, int customerID, String location) throws RemoteException {
 		TCPMessage message = TCPMessage.newReserveCar(id, customerID, location);
 
 		TCPMessage response = sendMessageWithErrorHandling(message);
@@ -323,11 +324,11 @@ public class TCPResourceManager implements IResourceManager {
 		else if (response.type == MessageType.ERROR)
 			throw new RemoteException(errorResponse);
 		else
-			return response.booleanResult;
+			return response.intResult;
 	}
 
 	@Override
-	public boolean reserveRoom(int id, int customerID, String location) throws RemoteException {
+	public int reserveRoom(int id, int customerID, String location) throws RemoteException {
 		TCPMessage message = TCPMessage.newReserveRoom(id, customerID, location);
 
 		TCPMessage response = sendMessageWithErrorHandling(message);
@@ -337,7 +338,7 @@ public class TCPResourceManager implements IResourceManager {
 		else if (response.type == MessageType.ERROR)
 			throw new RemoteException(errorResponse);
 		else
-			return response.booleanResult;
+			return response.intResult;
 	}
 
 	@Override
@@ -358,6 +359,25 @@ public class TCPResourceManager implements IResourceManager {
 	@Override
 	// not in user guide ?
 	public String getName() throws RemoteException {
+		// TODO Auto-generated method stub
+		throw new RemoteException("Not implemented yet");
+	}
+
+	@Override
+	public boolean checkFlightList(int xid, Vector<String> flightNumbers, String location) throws RemoteException {
+		// TODO Auto-generated method stub
+		throw new RemoteException("Not implemented yet");
+	}
+
+	@Override
+	public Vector<Integer> reserveFlightList(int xid, int customerId, Vector<String> flightNumbers, String location)
+			throws RemoteException {
+		// TODO Auto-generated method stub
+		throw new RemoteException("Not implemented yet");
+	}
+
+	@Override
+	public boolean cancelItemReservations(int xid, HashMap<String, Integer> reservedKeysMap) throws RemoteException {
 		// TODO Auto-generated method stub
 		throw new RemoteException("Not implemented yet");
 	}

@@ -10,6 +10,7 @@ import java.io.*;
 // Superclass for the three reservable items: Flight, Car, and Room
 public abstract class ReservableItem extends RMItem implements Serializable
 {
+	private static final long serialVersionUID = 1L;
 	private int m_nCount;
 	private int m_nPrice;
 	private int m_nReserved;

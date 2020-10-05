@@ -2,7 +2,6 @@ package Server.Interface;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
-import Server.Common.Customer;
 
 import java.util.*;
 

@@ -7,9 +7,6 @@ import java.rmi.registry.Registry;
 import java.rmi.RemoteException;
 import java.rmi.NotBoundException;
 
-import java.util.*;
-import java.io.*;
-
 public class RMIClient extends Client
 {
 	private static String s_serverHost = "localhost";
