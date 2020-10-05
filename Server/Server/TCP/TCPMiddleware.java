@@ -10,7 +10,7 @@ import Server.Common.Middleware;
 
 public class TCPMiddleware extends Middleware {
 
-	private static String s_serverName = "Server";
+	private static String s_serverName = "Middleware";
 	
 	private static int port = 33303;
 
@@ -28,7 +28,7 @@ public class TCPMiddleware extends Middleware {
 			serverSocket = new ServerSocket(port);
 			threadPool = Executors.newFixedThreadPool(50); // Maximum of 50 concurrent connections
 			
-			System.out.println("'" + s_serverName + "' middleware ready to receive TCP connections on port " + port);
+			System.out.println("'" + s_serverName + "' server ready to receive TCP connections on port " + port);
 			
 			while (true) {
 				// Receive a client connection request and dispatch it to a new thread
