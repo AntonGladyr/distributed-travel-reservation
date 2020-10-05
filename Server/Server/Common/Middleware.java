@@ -41,7 +41,7 @@ public class Middleware implements IResourceManager
 	private final String flightsServerName = "Flights";
 	private final String carsServerName = "Cars";
 	private final String roomsServerName = "Rooms";
-	private final int portNum = 33303;
+	protected final int portNum = 33303;
 	
 	protected String m_name = "";
 	protected RMHashMap m_data = new RMHashMap();
@@ -63,6 +63,11 @@ public class Middleware implements IResourceManager
 		}
 	}
 	
+	public String getFlightsHost() { return flightsHost; }
+	public String getCarsHost() { return carsHost; }
+	public String getRoomsHost() { return roomsHost; }
+	public int getPortNum() { return portNum; }
+	
 	// Reads a data item
 	protected RMItem readData(int xid, String key)
 	{
@@ -76,7 +81,7 @@ public class Middleware implements IResourceManager
 	}
 
 	// Writes a data item
-	protected void writeData(int xid, String key, RMItem value)
+	public void writeData(int xid, String key, RMItem value)
 	{
 		synchronized(m_data) {
 			m_data.put(key, value);
@@ -92,7 +97,7 @@ public class Middleware implements IResourceManager
 	}
 	
 	// Check if customer exists
-	protected Customer getCustomer(int xid, int customerID)
+	public Customer getCustomer(int xid, int customerID)
 	{
 		Trace.info("RM::getCustomer(" + xid + ", customer=" + customerID + ") called" );
 		// Read customer object if it exists (and read lock it)
