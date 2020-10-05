@@ -297,7 +297,7 @@ public class TCPConnectionHandler implements Runnable {
 	private TCPMessage handleReserveFlight(TCPMessage r) throws RemoteException {
 		System.out.println("Received RESERVE_FLIGHT request from [" + hostName + ":" + port + "]");
 
-		r.booleanResult = resourceManager.reserveFlight(r.id, r.customerID, r.flightNum);
+		r.intResult = resourceManager.reserveFlight(r.id, r.customerID, r.flightNum);
 		return r;
 	}
 
@@ -305,7 +305,7 @@ public class TCPConnectionHandler implements Runnable {
 	private TCPMessage handleReserveCar(TCPMessage r) throws RemoteException {
 		System.out.println("Received RESERVE_CAR request from [" + hostName + ":" + port + "]");
 
-		r.booleanResult = resourceManager.reserveCar(r.id, r.customerID, r.location);
+		r.intResult = resourceManager.reserveCar(r.id, r.customerID, r.location);
 		return r;
 	}
 
@@ -313,7 +313,7 @@ public class TCPConnectionHandler implements Runnable {
 	private TCPMessage handleReserveRoom(TCPMessage r) throws RemoteException {
 		System.out.println("Received RESERVE_ROOM request from [" + hostName + ":" + port + "]");
 
-		r.booleanResult = resourceManager.reserveRoom(r.id, r.customerID, r.location);
+		r.intResult = resourceManager.reserveRoom(r.id, r.customerID, r.location);
 		return r;
 	}
 
