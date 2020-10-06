@@ -281,7 +281,7 @@ public class TCPMiddlewareConnectionHandler implements Runnable {
 			// Reserve the flight in the customer database
 			if (response != null && response.type != MessageType.ERROR && response.intResult != -1) {
 				
-				customer.reserve(Flight.getKey(r.flightNum), String.valueOf(r.flightNum), r.flightPrice);
+				customer.reserve(Flight.getKey(r.flightNum), String.valueOf(r.flightNum), response.intResult);
 				middleware.writeData(r.id, customer.getKey(), customer);
 			}
 			
@@ -308,7 +308,7 @@ public class TCPMiddlewareConnectionHandler implements Runnable {
 			// Reserve the car in the customer database
 			if (response != null && response.type != MessageType.ERROR && response.intResult != -1) {
 				
-				customer.reserve(Car.getKey(r.location), r.location, r.intResult);
+				customer.reserve(Car.getKey(r.location), r.location, response.intResult);
 				middleware.writeData(r.id, customer.getKey(), customer);
 			}
 			
@@ -335,7 +335,7 @@ public class TCPMiddlewareConnectionHandler implements Runnable {
 			// Reserve the room in the customer database
 			if (response != null && response.type != MessageType.ERROR && response.intResult != -1) {
 				
-				customer.reserve(Room.getKey(r.location), r.location, r.intResult);
+				customer.reserve(Room.getKey(r.location), r.location, response.intResult);
 				middleware.writeData(r.id, customer.getKey(), customer);
 			}
 			
