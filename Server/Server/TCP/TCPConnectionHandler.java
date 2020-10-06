@@ -110,6 +110,12 @@ public class TCPConnectionHandler implements Runnable {
 				case BUNDLE:
 					response = handleBundle(request);
 					break;
+				case CHECK_FLIGHT_LIST:
+					response = handleCheckFlightList(request);
+					break;
+				case RESERVE_FLIGHT_LIST:
+					response = handleReserveFlightList(request);
+					break;
 				default:
 					throw new IOException("Unrecognized TCPMessage.type: " + request.type);
 				}
@@ -324,5 +330,20 @@ public class TCPConnectionHandler implements Runnable {
 		r.booleanResult = resourceManager.bundle(r.id, r.customerID, r.flightNumbers, r.location, r.car, r.room);
 		return r;
 	}
+	
+	// Handles messages of type CHECK_FLIGHT_LIST
+	private TCPMessage handleCheckFlightList(TCPMessage r) throws RemoteException {
+		System.out.println("Received CHECK_FLIGHT_LIST request from [" + hostName + ":" + port + "]");
 
+		r.booleanResult = resourceManager.checkFlightList(r.id, r.flightNumbers, r.location);
+		return r;
+	}
+	
+	// Handles messages of type RESERVE_FLIGHT_LIST
+	private TCPMessage handleReserveFlightList(TCPMessage r) throws RemoteException {
+		System.out.println("Received RESERVE_FLIGHT_LIST request from [" + hostName + ":" + port + "]");
+
+		r.vectorIntResult = resourceManager.reserveFlightList(r.id, r.customerID, r.flightNumbers, r.location);
+		return r;
+	}
 }

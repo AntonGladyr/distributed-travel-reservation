@@ -5,6 +5,13 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.rmi.RemoteException;
+import java.util.Vector;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import Server.Common.Car;
 import Server.Common.Customer;
@@ -31,6 +38,10 @@ public class TCPMiddlewareConnectionHandler implements Runnable {
 
 	// The middleware which will handle customer-specific operations
 	Middleware middleware;
+	
+	// Used in the bundle request
+	private static final int MAX_THREADS = 3;
+	private static final int WAIT_RESPONSE = 5;  // Seconds
 
 	public TCPMiddlewareConnectionHandler(Socket clientSocket, Middleware middleware) {
 		this.clientSocket = clientSocket;
@@ -255,6 +266,7 @@ public class TCPMiddlewareConnectionHandler implements Runnable {
 	}
 
 	// Handles messages of type DELETE_CUSTOMER
+	// TODO fix this method
 	private TCPMessage handleDeleteCustomer(TCPMessage r) throws RemoteException {
 		Trace.info("MW::Received DELETE_CUSTOMER request from [" + clientHost + ":" + clientPort + "], processing locally");
 
@@ -346,9 +358,220 @@ public class TCPMiddlewareConnectionHandler implements Runnable {
 	// Handles messages of type BUNDLE
 	private TCPMessage handleBundle(TCPMessage r) {
 		Trace.info("MW::Received BUNDLE request from [" + clientHost + ":" + clientPort + "]");
-		Trace.warn("MW::BUNDLE NOT IMPLEMENTED YET");
-
-		r.booleanResult = false;
+		
+		if (r.flightNumbers.isEmpty()) {
+			r.booleanResult = false;
+			return r;
+		}
+		
+		boolean available = checkItemsAvailability(r);
+		
+		if (available) r.booleanResult = reserveItemsBundle(r);
+		else r.booleanResult = false;
 		return r;
+	}
+	
+	// Checks if the items in a BUNDLE request are available
+	private boolean checkItemsAvailability (TCPMessage r) {
+		
+		Trace.info("MW::Processing BUNDLE[checkItemsAvailability](" + r.id + ", " + r.customerID + ", " +
+					   r.flightNumbers.toString() + "," + r.location + ", " + r.car + ", " + r.room + ")");
+		boolean flightsResult = true;
+		boolean carResult = true;
+		boolean roomResult = true;
+		
+		// Threads executor
+		ExecutorService executor = Executors.newFixedThreadPool(MAX_THREADS);
+		Future<Boolean> flightsFuture = null;
+		Future<Boolean> carFuture = null;
+		Future<Boolean> roomFuture = null;
+
+		// If customer does not exist, return false
+		Customer customer = middleware.getCustomer(r.id, r.customerID);
+		if (customer == null) return false;
+		
+		try {
+			// Send asynchronous requests to the resource managers
+			// Check the flights' availability
+			if (!r.flightNumbers.isEmpty()) {
+				
+				Callable<Boolean> checkFlightsCallback = () -> {	
+					Trace.info("MW::BUNDLE forwarding checkFlightList(" + r.id + ", " + r.flightNumbers + ", " + r.location + ") to flightsHost");
+					
+					// Send a CHECK_FLIGHT_LIST request to the flights server
+					TCPMessage checkRequest = TCPMessage.newCheckFlightList(r.id, r.flightNumbers, r.location);
+					TCPMessage checkResponse = forwardToFlights(checkRequest);
+					return checkResponse.booleanResult;
+				};
+
+				flightsFuture = executor.submit(checkFlightsCallback);
+			}
+			
+			// Check the car availability
+			if (r.car) {
+				
+				Callable<Boolean> checkCarCallback = () -> {
+					Trace.info("MW::BUNDLE forwarding queryCars(" + r.id + ", " + r.location + ") to carsHost");
+					
+					// Send a QUERY_CARS request to the cars server
+					TCPMessage checkRequest = TCPMessage.newQueryCars(r.id, r.location);
+					TCPMessage checkResponse = forwardToCars(checkRequest);
+					return checkResponse.intResult > 0;
+				};
+				
+				carFuture = executor.submit(checkCarCallback);
+			}
+
+			// Check the room availability
+			if (r.room) {
+				
+				Callable<Boolean> checkRoomCallback = () -> {
+					Trace.info("MW::BUNDLE forwarding queryRooms(" + r.id + ", " + r.location + ") to roomsHost");
+					
+					// Send a QUERY_ROOMS request to the rooms server
+					TCPMessage checkRequest = TCPMessage.newQueryRooms(r.id, r.location);
+					TCPMessage checkResponse = forwardToRooms(checkRequest);
+					return checkResponse.intResult > 0;
+				};
+				
+				roomFuture = executor.submit(checkRoomCallback);
+			}	
+
+			// Wait for previously submitted tasks to execute, and then terminate the executor
+			executor.awaitTermination(WAIT_RESPONSE, TimeUnit.SECONDS);
+
+			// Get the results
+			if (!r.flightNumbers.isEmpty()) flightsResult = handleThreadResult(flightsFuture);
+			if (r.car) carResult = handleThreadResult(carFuture);
+			if (r.room) roomResult = handleThreadResult(roomFuture);	
+			
+			return flightsResult && carResult && roomResult;
+		}
+		catch(InterruptedException ie) {
+			Trace.warn("MW::BUNDLE checkItemsAvailability thread interrupted");
+			return false;
+		}
+	}
+	
+	// Extracts the result from a Future<Boolean> object
+	private boolean handleThreadResult(Future<Boolean> itemsFuture) {
+		try {
+			// Limit the thread response time
+			return itemsFuture.get(WAIT_RESPONSE, TimeUnit.SECONDS);
+		}
+		catch(Exception e) {
+			Trace.warn("RM::Thread exception: " + e.getMessage());
+			itemsFuture.cancel(true);
+			return false;
+		}
+	}
+
+	// Reserves the items in a BUNDLE request
+	private boolean reserveItemsBundle(TCPMessage r) {
+
+		Trace.info("MW::Processing BUNDLE[reserveItemsBundle](" + r.id + ", " + r.customerID + ", " +
+					   r.flightNumbers.toString() + "," + r.location + ", " + r.car + ", " + r.room + ")");
+		
+		boolean flightsResult = true;
+		boolean carResult = true;
+		boolean roomResult = true;
+
+		// Threads executor
+		ExecutorService executor = Executors.newFixedThreadPool(MAX_THREADS);
+		Future<Boolean> flightsFuture = CompletableFuture.completedFuture(true);
+		Future<Boolean> carFuture = CompletableFuture.completedFuture(true);
+		Future<Boolean> roomFuture = CompletableFuture.completedFuture(true);
+
+		// If customer does not exist, return false
+		Customer customer = middleware.getCustomer(r.id, r.customerID);
+		if (customer == null) return false;
+
+		try {
+			// Send asynchronous requests to the resource managers
+			// Reserve flights
+			if (!r.flightNumbers.isEmpty()) {
+				Callable<Boolean> reserveFlightsCallback = () -> {
+					
+					Trace.info("MW::BUNDLE forwarding reserveFlights(" + r.id + ", " + r.customerID + ", " + r.flightNumbers + ", " + r.location + ") to flightsHost");
+					
+					// Send a RESERVE_FLIGHT_LIST request to the flights server
+					TCPMessage request = TCPMessage.newReserveFlightList(r.id, r.customerID, r.flightNumbers, r.location);
+					TCPMessage response = forwardToFlights(request);
+					
+					// Check the result
+					Vector<Integer> prices = response.vectorIntResult;
+					if (prices.isEmpty()) return false;
+					
+					// Reserve the flights in the customer database
+					for (int i = 0; i < prices.size(); i++) {
+						int flightNum = Integer.parseInt(r.flightNumbers.get(i));
+						customer.reserve(Flight.getKey(flightNum), String.valueOf(flightNum), prices.get(i));
+						middleware.writeData(r.id, customer.getKey(), customer);
+					}
+					
+					return true;
+				};
+
+				flightsFuture = executor.submit(reserveFlightsCallback);
+			}
+			
+			// Reserve car
+			if (r.car) {	
+				Callable<Boolean> reserveCarCallback = () -> {
+					
+					Trace.info("MW::BUNDLE forwarding reserveCar(" + r.id + ", " + r.customerID + ", " + r.location + ") to carsHost");
+					
+					// Send a RESERVE_CAR request to the cars server
+					TCPMessage request = TCPMessage.newReserveCar(r.id, r.customerID, r.location);
+					TCPMessage response = forwardToCars(request);
+					
+					// Check the result
+					if (response.intResult == -1) return false;
+					
+					// Reserve the car in the customer database
+					customer.reserve(Car.getKey(r.location), r.location, response.intResult);
+					middleware.writeData(r.id, customer.getKey(), customer);
+					return true;
+				};
+				
+				carFuture = executor.submit(reserveCarCallback);
+			}
+			
+			// Reserve room
+			if (r.room) {	
+				Callable<Boolean> reserveRoomCallback = () -> {
+					
+					Trace.info("MW::BUNDLE forwarding reserveRoom(" + r.id + ", " + r.customerID + ", " + r.location + ") to roomsHost");
+					
+					// Send a RESERVE_ROOM request to the rooms server
+					TCPMessage request = TCPMessage.newReserveRoom(r.id, r.customerID, r.location);
+					TCPMessage response = forwardToRooms(request);
+					
+					// Check the result
+					if (response.intResult == -1) return false;
+					
+					// Reserve the room in the customer database
+					customer.reserve(Room.getKey(r.location), r.location, response.intResult);
+					middleware.writeData(r.id, customer.getKey(), customer);
+					return true;
+				};
+				
+				roomFuture = executor.submit(reserveRoomCallback);
+			}
+			
+			// Wait for previously submitted tasks to execute, and then terminate the executor
+			executor.awaitTermination(WAIT_RESPONSE, TimeUnit.SECONDS);
+
+			// Get the results
+			if (!r.flightNumbers.isEmpty()) flightsResult = handleThreadResult(flightsFuture);
+			if (r.car) carResult = handleThreadResult(carFuture);
+			if (r.room) roomResult = handleThreadResult(roomFuture);	
+			
+			return flightsResult && carResult && roomResult;
+		}
+		catch(InterruptedException ie) {
+			Trace.warn("MW::BUNDLE reserveItemsBundle thread interrupted");
+			return false;
+		}
 	}
 }

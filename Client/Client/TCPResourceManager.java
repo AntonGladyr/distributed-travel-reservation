@@ -23,6 +23,7 @@ public class TCPResourceManager implements IResourceManager {
 
 	private String communicationError = "Communication error; no response received.";
 	private String errorResponse = "Issue on the server; error response recieved.";
+	private String notAvailable = "Request not available directly from the client";
 
 	// Constructor
 	public TCPResourceManager(String server, int port) {
@@ -357,28 +358,23 @@ public class TCPResourceManager implements IResourceManager {
 	}
 
 	@Override
-	// not in user guide ?
 	public String getName() throws RemoteException {
-		// TODO Auto-generated method stub
-		throw new RemoteException("Not implemented yet");
+		throw new RemoteException(notAvailable);
 	}
 
 	@Override
 	public boolean checkFlightList(int xid, Vector<String> flightNumbers, String location) throws RemoteException {
-		// TODO Auto-generated method stub
-		throw new RemoteException("Not implemented yet");
+		throw new RemoteException(notAvailable);
 	}
 
 	@Override
 	public Vector<Integer> reserveFlightList(int xid, int customerId, Vector<String> flightNumbers, String location)
 			throws RemoteException {
-		// TODO Auto-generated method stub
-		throw new RemoteException("Not implemented yet");
+		throw new RemoteException(notAvailable);
 	}
 
 	@Override
 	public boolean cancelItemReservations(int xid, HashMap<String, Integer> reservedKeysMap) throws RemoteException {
-		// TODO Auto-generated method stub
-		throw new RemoteException("Not implemented yet");
+		throw new RemoteException(notAvailable);
 	}
 }

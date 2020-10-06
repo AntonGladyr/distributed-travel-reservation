@@ -32,6 +32,7 @@ public class TCPMessage implements Serializable {
 	public boolean booleanResult;
 	public int intResult;
 	public String stringResult;
+	public Vector<Integer> vectorIntResult;
 	
 	// Constructor
 	public TCPMessage(MessageType type) {
@@ -174,6 +175,24 @@ public class TCPMessage implements Serializable {
 		
 		return message;
 	}
+	public static TCPMessage newCheckFlightList(int id, Vector<String> flightNumbers, String location) {
+		TCPMessage message = new TCPMessage(MessageType.CHECK_FLIGHT_LIST); 
+		message.id = id;
+		message.flightNumbers = flightNumbers;
+		message.location = location;
+		
+		return message;
+	}
+	public static TCPMessage newReserveFlightList(int id, int customerID, Vector<String> flightNumbers, String location) {
+		TCPMessage message = new TCPMessage(MessageType.RESERVE_FLIGHT_LIST); 
+		message.id = id;
+		message.customerID = customerID;
+		message.flightNumbers = flightNumbers;
+		message.location = location;
+		
+		return message;
+	}
+	
 //	public static TCPMessage newGetName() {
 //		TCPMessage message = new TCPMessage(MessageType.GET_NAME); 
 //		message.id = id;

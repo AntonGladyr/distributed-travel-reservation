@@ -23,5 +23,7 @@ public enum MessageType {
     RESERVE_ROOM,
     BUNDLE,
     GET_NAME,
+    CHECK_FLIGHT_LIST,
+    RESERVE_FLIGHT_LIST,
     ERROR,
 }
