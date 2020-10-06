@@ -282,7 +282,7 @@ public class TCPConnectionHandler implements Runnable {
 	private TCPMessage handleQueryFlightPrice(TCPMessage r) throws RemoteException {
 		System.out.println("Received QUERRY_FLIGHT_PRICE request from [" + hostName + ":" + port + "]");
 
-		r.intResult = resourceManager.queryFlightPrice(r.id, r.flightNum);
+		r.intResult = resourceManager.queryFlightPrice(r.id, r.flightNumber);
 		return r;
 	}
 
