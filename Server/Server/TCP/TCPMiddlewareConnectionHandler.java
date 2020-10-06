@@ -422,67 +422,61 @@ public class TCPMiddlewareConnectionHandler implements Runnable {
 		Customer customer = middleware.getCustomer(r.id, r.customerID);
 		if (customer == null) return false;
 		
-		try {
-			// Send asynchronous requests to the resource managers
-			// Check the flights' availability
-			if (!r.flightNumbers.isEmpty()) {
-				
-				Callable<Boolean> checkFlightsCallback = () -> {	
-					Trace.info("MW::BUNDLE forwarding checkFlightList(" + r.id + ", " + r.flightNumbers + ", " + r.location + ") to flightsHost");
-					
-					// Send a CHECK_FLIGHT_LIST request to the flights server
-					TCPMessage checkRequest = TCPMessage.newCheckFlightList(r.id, r.flightNumbers, r.location);
-					TCPMessage checkResponse = forwardToFlights(checkRequest);
-					return checkResponse.booleanResult;
-				};
-
-				flightsFuture = executor.submit(checkFlightsCallback);
-			}
+		// Send asynchronous requests to the resource managers
+		// Check the flights' availability
+		if (!r.flightNumbers.isEmpty()) {
 			
-			// Check the car availability
-			if (r.car) {
+			Callable<Boolean> checkFlightsCallback = () -> {	
+				Trace.info("MW::BUNDLE forwarding checkFlightList(" + r.id + ", " + r.flightNumbers + ", " + r.location + ") to flightsHost");
 				
-				Callable<Boolean> checkCarCallback = () -> {
-					Trace.info("MW::BUNDLE forwarding queryCars(" + r.id + ", " + r.location + ") to carsHost");
-					
-					// Send a QUERY_CARS request to the cars server
-					TCPMessage checkRequest = TCPMessage.newQueryCars(r.id, r.location);
-					TCPMessage checkResponse = forwardToCars(checkRequest);
-					return checkResponse.intResult > 0;
-				};
-				
-				carFuture = executor.submit(checkCarCallback);
-			}
+				// Send a CHECK_FLIGHT_LIST request to the flights server
+				TCPMessage checkRequest = TCPMessage.newCheckFlightList(r.id, r.flightNumbers, r.location);
+				TCPMessage checkResponse = forwardToFlights(checkRequest);
+				return checkResponse.booleanResult;
+			};
 
-			// Check the room availability
-			if (r.room) {
-				
-				Callable<Boolean> checkRoomCallback = () -> {
-					Trace.info("MW::BUNDLE forwarding queryRooms(" + r.id + ", " + r.location + ") to roomsHost");
-					
-					// Send a QUERY_ROOMS request to the rooms server
-					TCPMessage checkRequest = TCPMessage.newQueryRooms(r.id, r.location);
-					TCPMessage checkResponse = forwardToRooms(checkRequest);
-					return checkResponse.intResult > 0;
-				};
-				
-				roomFuture = executor.submit(checkRoomCallback);
-			}	
-
-			// Wait for previously submitted tasks to execute, and then terminate the executor
-			executor.awaitTermination(WAIT_RESPONSE, TimeUnit.SECONDS);
-
-			// Get the results
-			if (!r.flightNumbers.isEmpty()) flightsResult = handleThreadResult(flightsFuture);
-			if (r.car) carResult = handleThreadResult(carFuture);
-			if (r.room) roomResult = handleThreadResult(roomFuture);	
+			flightsFuture = executor.submit(checkFlightsCallback);
+		}
+		
+		// Check the car availability
+		if (r.car) {
 			
-			return flightsResult && carResult && roomResult;
+			Callable<Boolean> checkCarCallback = () -> {
+				Trace.info("MW::BUNDLE forwarding queryCars(" + r.id + ", " + r.location + ") to carsHost");
+				
+				// Send a QUERY_CARS request to the cars server
+				TCPMessage checkRequest = TCPMessage.newQueryCars(r.id, r.location);
+				TCPMessage checkResponse = forwardToCars(checkRequest);
+				return checkResponse.intResult > 0;
+			};
+			
+			carFuture = executor.submit(checkCarCallback);
 		}
-		catch(InterruptedException ie) {
-			Trace.warn("MW::BUNDLE checkItemsAvailability thread interrupted");
-			return false;
-		}
+
+		// Check the room availability
+		if (r.room) {
+			
+			Callable<Boolean> checkRoomCallback = () -> {
+				Trace.info("MW::BUNDLE forwarding queryRooms(" + r.id + ", " + r.location + ") to roomsHost");
+				
+				// Send a QUERY_ROOMS request to the rooms server
+				TCPMessage checkRequest = TCPMessage.newQueryRooms(r.id, r.location);
+				TCPMessage checkResponse = forwardToRooms(checkRequest);
+				return checkResponse.intResult > 0;
+			};
+			
+			roomFuture = executor.submit(checkRoomCallback);
+		}	
+
+		// Wait for previously submitted tasks to execute, and then terminate the executor
+		executor.shutdown();
+
+		// Get the results
+		if (!r.flightNumbers.isEmpty()) flightsResult = handleThreadResult(flightsFuture);
+		if (r.car) carResult = handleThreadResult(carFuture);
+		if (r.room) roomResult = handleThreadResult(roomFuture);	
+		
+		return flightsResult && carResult && roomResult;
 	}
 	
 	// Extracts the result from a Future<Boolean> object
@@ -518,93 +512,87 @@ public class TCPMiddlewareConnectionHandler implements Runnable {
 		Customer customer = middleware.getCustomer(r.id, r.customerID);
 		if (customer == null) return false;
 
-		try {
-			// Send asynchronous requests to the resource managers
-			// Reserve flights
-			if (!r.flightNumbers.isEmpty()) {
-				Callable<Boolean> reserveFlightsCallback = () -> {
-					
-					Trace.info("MW::BUNDLE forwarding reserveFlights(" + r.id + ", " + r.customerID + ", " + r.flightNumbers + ", " + r.location + ") to flightsHost");
-					
-					// Send a RESERVE_FLIGHT_LIST request to the flights server
-					TCPMessage request = TCPMessage.newReserveFlightList(r.id, r.customerID, r.flightNumbers, r.location);
-					TCPMessage response = forwardToFlights(request);
-					
-					// Check the result
-					Vector<Integer> prices = response.vectorIntResult;
-					if (prices.isEmpty()) return false;
-					
-					// Reserve the flights in the customer database
-					for (int i = 0; i < prices.size(); i++) {
-						int flightNum = Integer.parseInt(r.flightNumbers.get(i));
-						customer.reserve(Flight.getKey(flightNum), String.valueOf(flightNum), prices.get(i));
-						middleware.writeData(r.id, customer.getKey(), customer);
-					}
-					
-					return true;
-				};
-
-				flightsFuture = executor.submit(reserveFlightsCallback);
-			}
-			
-			// Reserve car
-			if (r.car) {	
-				Callable<Boolean> reserveCarCallback = () -> {
-					
-					Trace.info("MW::BUNDLE forwarding reserveCar(" + r.id + ", " + r.customerID + ", " + r.location + ") to carsHost");
-					
-					// Send a RESERVE_CAR request to the cars server
-					TCPMessage request = TCPMessage.newReserveCar(r.id, r.customerID, r.location);
-					TCPMessage response = forwardToCars(request);
-					
-					// Check the result
-					if (response.intResult == -1) return false;
-					
-					// Reserve the car in the customer database
-					customer.reserve(Car.getKey(r.location), r.location, response.intResult);
-					middleware.writeData(r.id, customer.getKey(), customer);
-					return true;
-				};
+		// Send asynchronous requests to the resource managers
+		// Reserve flights
+		if (!r.flightNumbers.isEmpty()) {
+			Callable<Boolean> reserveFlightsCallback = () -> {
 				
-				carFuture = executor.submit(reserveCarCallback);
-			}
-			
-			// Reserve room
-			if (r.room) {	
-				Callable<Boolean> reserveRoomCallback = () -> {
-					
-					Trace.info("MW::BUNDLE forwarding reserveRoom(" + r.id + ", " + r.customerID + ", " + r.location + ") to roomsHost");
-					
-					// Send a RESERVE_ROOM request to the rooms server
-					TCPMessage request = TCPMessage.newReserveRoom(r.id, r.customerID, r.location);
-					TCPMessage response = forwardToRooms(request);
-					
-					// Check the result
-					if (response.intResult == -1) return false;
-					
-					// Reserve the room in the customer database
-					customer.reserve(Room.getKey(r.location), r.location, response.intResult);
-					middleware.writeData(r.id, customer.getKey(), customer);
-					return true;
-				};
+				Trace.info("MW::BUNDLE forwarding reserveFlights(" + r.id + ", " + r.customerID + ", " + r.flightNumbers + ", " + r.location + ") to flightsHost");
 				
-				roomFuture = executor.submit(reserveRoomCallback);
-			}
-			
-			// Wait for previously submitted tasks to execute, and then terminate the executor
-			executor.awaitTermination(WAIT_RESPONSE, TimeUnit.SECONDS);
+				// Send a RESERVE_FLIGHT_LIST request to the flights server
+				TCPMessage request = TCPMessage.newReserveFlightList(r.id, r.customerID, r.flightNumbers, r.location);
+				TCPMessage response = forwardToFlights(request);
+				
+				// Check the result
+				Vector<Integer> prices = response.vectorIntResult;
+				if (prices.isEmpty()) return false;
+				
+				// Reserve the flights in the customer database
+				for (int i = 0; i < prices.size(); i++) {
+					int flightNum = Integer.parseInt(r.flightNumbers.get(i));
+					customer.reserve(Flight.getKey(flightNum), String.valueOf(flightNum), prices.get(i));
+					middleware.writeData(r.id, customer.getKey(), customer);
+				}
+				
+				return true;
+			};
 
-			// Get the results
-			if (!r.flightNumbers.isEmpty()) flightsResult = handleThreadResult(flightsFuture);
-			if (r.car) carResult = handleThreadResult(carFuture);
-			if (r.room) roomResult = handleThreadResult(roomFuture);	
+			flightsFuture = executor.submit(reserveFlightsCallback);
+		}
+		
+		// Reserve car
+		if (r.car) {	
+			Callable<Boolean> reserveCarCallback = () -> {
+				
+				Trace.info("MW::BUNDLE forwarding reserveCar(" + r.id + ", " + r.customerID + ", " + r.location + ") to carsHost");
+				
+				// Send a RESERVE_CAR request to the cars server
+				TCPMessage request = TCPMessage.newReserveCar(r.id, r.customerID, r.location);
+				TCPMessage response = forwardToCars(request);
+				
+				// Check the result
+				if (response.intResult == -1) return false;
+				
+				// Reserve the car in the customer database
+				customer.reserve(Car.getKey(r.location), r.location, response.intResult);
+				middleware.writeData(r.id, customer.getKey(), customer);
+				return true;
+			};
 			
-			return flightsResult && carResult && roomResult;
+			carFuture = executor.submit(reserveCarCallback);
 		}
-		catch(InterruptedException ie) {
-			Trace.warn("MW::BUNDLE reserveItemsBundle thread interrupted");
-			return false;
+		
+		// Reserve room
+		if (r.room) {	
+			Callable<Boolean> reserveRoomCallback = () -> {
+				
+				Trace.info("MW::BUNDLE forwarding reserveRoom(" + r.id + ", " + r.customerID + ", " + r.location + ") to roomsHost");
+				
+				// Send a RESERVE_ROOM request to the rooms server
+				TCPMessage request = TCPMessage.newReserveRoom(r.id, r.customerID, r.location);
+				TCPMessage response = forwardToRooms(request);
+				
+				// Check the result
+				if (response.intResult == -1) return false;
+				
+				// Reserve the room in the customer database
+				customer.reserve(Room.getKey(r.location), r.location, response.intResult);
+				middleware.writeData(r.id, customer.getKey(), customer);
+				return true;
+			};
+			
+			roomFuture = executor.submit(reserveRoomCallback);
 		}
+		
+		// Wait for previously submitted tasks to execute, and then terminate the executor
+		executor.shutdown();
+
+		// Get the results
+		if (!r.flightNumbers.isEmpty()) flightsResult = handleThreadResult(flightsFuture);
+		if (r.car) carResult = handleThreadResult(carFuture);
+		if (r.room) roomResult = handleThreadResult(roomFuture);	
+		
+		return flightsResult && carResult && roomResult;
 	}
 	
 	// Used by DELETE_CUSTOMER to cancel all of a customer's reservations
@@ -614,47 +602,41 @@ public class TCPMiddlewareConnectionHandler implements Runnable {
 		
 		TCPMessage request = TCPMessage.newCancelItemReservations(xid, reservationsMap);
 		
-		try {
-			// Cancel all reservations
-			Callable<Boolean> cancelFlights = () -> {
-				
-				// Send a CANCEL_ITEM_RESERVATIONS request to the flights server
-				TCPMessage response = forwardToFlights(request);
-				return response.booleanResult;
-			};
+		// Cancel all reservations
+		Callable<Boolean> cancelFlights = () -> {
 			
-			Callable<Boolean> cancelCars = () -> {
-				
-				// Send a CANCEL_ITEM_RESERVATIONS request to the cars server
-				TCPMessage response = forwardToCars(request);
-				return response.booleanResult;
-			};
-			
-			Callable<Boolean> cancelRooms = () -> {
-				
-				// Send a CANCEL_ITEM_RESERVATIONS request to the rooms server
-				TCPMessage response = forwardToRooms(request);
-				return response.booleanResult;
-			};
-			
-			// Submit value-returning tasks for execution in separate threads
-			Future<Boolean> flightsFuture = executor.submit(cancelFlights);
-			Future<Boolean> carsFuture = executor.submit(cancelCars);
-			Future<Boolean> roomsFuture = executor.submit(cancelRooms);
-			
-			// Wait for previously submitted tasks to execute, and then terminate the executor
-			executor.awaitTermination(WAIT_RESPONSE, TimeUnit.SECONDS);
+			// Send a CANCEL_ITEM_RESERVATIONS request to the flights server
+			TCPMessage response = forwardToFlights(request);
+			return response.booleanResult;
+		};
 		
-			// Get the results
-			boolean flightsResult = handleThreadResult(flightsFuture);
-			boolean carResult = handleThreadResult(carsFuture);
-			boolean roomResult = handleThreadResult(roomsFuture);
+		Callable<Boolean> cancelCars = () -> {
+			
+			// Send a CANCEL_ITEM_RESERVATIONS request to the cars server
+			TCPMessage response = forwardToCars(request);
+			return response.booleanResult;
+		};
+		
+		Callable<Boolean> cancelRooms = () -> {
+			
+			// Send a CANCEL_ITEM_RESERVATIONS request to the rooms server
+			TCPMessage response = forwardToRooms(request);
+			return response.booleanResult;
+		};
+		
+		// Submit value-returning tasks for execution in separate threads
+		Future<Boolean> flightsFuture = executor.submit(cancelFlights);
+		Future<Boolean> carsFuture = executor.submit(cancelCars);
+		Future<Boolean> roomsFuture = executor.submit(cancelRooms);
+		
+		// Wait for previously submitted tasks to execute, and then terminate the executor
+		executor.shutdown();
+	
+		// Get the results
+		boolean flightsResult = handleThreadResult(flightsFuture);
+		boolean carResult = handleThreadResult(carsFuture);
+		boolean roomResult = handleThreadResult(roomsFuture);
 
-			return flightsResult && carResult && roomResult;
-		}
-		catch(InterruptedException ie) {
-			Trace.warn("MW::Cancel reservations thread interrupted");
-			return false;
-		}
+		return flightsResult && carResult && roomResult;
 	}
 }
