@@ -85,7 +85,7 @@ public class Middleware implements IResourceManager
 	}
 
 	// Remove the item out of storage
-	protected void removeData(int xid, String key)
+	public void removeData(int xid, String key)
 	{
 		synchronized(m_data) {
 			m_data.remove(key);

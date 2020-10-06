@@ -1,6 +1,7 @@
 package Server.Interface;
 
 import java.io.Serializable;
+import java.util.HashMap;
 import java.util.Vector;
 
 public class TCPMessage implements Serializable {
@@ -27,6 +28,7 @@ public class TCPMessage implements Serializable {
 	public Vector<String> flightNumbers;
 	public boolean car;
 	public boolean room;
+	public HashMap<String,Integer> reservedKeysMap;
 	
 	// Message response result (different result type depending on the message type)
 	public boolean booleanResult;
@@ -189,6 +191,13 @@ public class TCPMessage implements Serializable {
 		message.customerID = customerID;
 		message.flightNumbers = flightNumbers;
 		message.location = location;
+		
+		return message;
+	}
+	public static TCPMessage newCancelItemReservations(int id, HashMap<String,Integer> reservedKeysMap) {
+		TCPMessage message = new TCPMessage(MessageType.CANCEL_ITEM_RESERVATIONS); 
+		message.id = id;
+		message.reservedKeysMap = reservedKeysMap;
 		
 		return message;
 	}

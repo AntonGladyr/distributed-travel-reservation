@@ -116,6 +116,9 @@ public class TCPConnectionHandler implements Runnable {
 				case RESERVE_FLIGHT_LIST:
 					response = handleReserveFlightList(request);
 					break;
+				case CANCEL_ITEM_RESERVATIONS:
+					response = handleCancelItemReservations(request);
+					break;
 				default:
 					throw new IOException("Unrecognized TCPMessage.type: " + request.type);
 				}
@@ -344,6 +347,14 @@ public class TCPConnectionHandler implements Runnable {
 		System.out.println("Received RESERVE_FLIGHT_LIST request from [" + hostName + ":" + port + "]");
 
 		r.vectorIntResult = resourceManager.reserveFlightList(r.id, r.customerID, r.flightNumbers, r.location);
+		return r;
+	}
+	
+	// Handles messages of type CANCEL_ITEM_RESERVATIONS
+	private TCPMessage handleCancelItemReservations(TCPMessage r) throws RemoteException {
+		System.out.println("Received CANCEL_ITEM_RESERVATIONS request from [" + hostName + ":" + port + "]");
+
+		r.booleanResult = resourceManager.cancelItemReservations(r.id, r.reservedKeysMap);
 		return r;
 	}
 }

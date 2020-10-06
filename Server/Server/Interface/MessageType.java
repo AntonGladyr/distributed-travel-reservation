@@ -25,5 +25,6 @@ public enum MessageType {
     GET_NAME,
     CHECK_FLIGHT_LIST,
     RESERVE_FLIGHT_LIST,
+    CANCEL_ITEM_RESERVATIONS,
     ERROR,
 }

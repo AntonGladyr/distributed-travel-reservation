@@ -5,6 +5,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.rmi.RemoteException;
+import java.util.HashMap;
 import java.util.Vector;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
@@ -17,6 +18,8 @@ import Server.Common.Car;
 import Server.Common.Customer;
 import Server.Common.Flight;
 import Server.Common.Middleware;
+import Server.Common.RMHashMap;
+import Server.Common.ReservedItem;
 import Server.Common.Room;
 import Server.Common.Trace;
 import Server.Interface.MessageType;
@@ -266,11 +269,40 @@ public class TCPMiddlewareConnectionHandler implements Runnable {
 	}
 
 	// Handles messages of type DELETE_CUSTOMER
-	// TODO fix this method
 	private TCPMessage handleDeleteCustomer(TCPMessage r) throws RemoteException {
-		Trace.info("MW::Received DELETE_CUSTOMER request from [" + clientHost + ":" + clientPort + "], processing locally");
+		Trace.info("MW::Received DELETE_CUSTOMER(" + r.id + ", " + r.customerID + ") request from [" + clientHost + ":" + clientPort + "], processing locally");
 
-		r.booleanResult = middleware.deleteCustomer(r.id, r.customerID);
+		Customer customer = middleware.getCustomer(r.id, r.customerID);
+		if (customer == null)
+		{
+			Trace.warn("MW::deleteCustomer(" + r.id + ", " + r.customerID + ") failed--customer doesn't exist");
+			r.booleanResult = false;
+			return r;
+		}
+
+		// Increase the reserved numbers of all reservable items which the customer reserved. 
+		RMHashMap reservations = customer.getReservations();
+		
+		// Hashmap for storing keys and number of reservations
+		HashMap<String, Integer> reservationsMap = new HashMap<String, Integer>(); // <key, count>
+		
+		for (String reservedKey : reservations.keySet())
+		{
+			ReservedItem reserveditem = customer.getReservedItem(reservedKey);
+			reservationsMap.put(reserveditem.getKey(), reserveditem.getCount());	
+		}
+		
+		// Cancel item reservations in all resource managers. Return false if failed
+		if (!cancelItemSet(r.id, reservationsMap)) {
+			r.booleanResult = false;
+			return r;
+		}
+		
+		// Remove the customer from the storage
+		middleware.removeData(r.id, customer.getKey());
+		Trace.info("MW::deleteCustomer(" + r.id + ", " + r.customerID + ") succeeded");
+		
+		r.booleanResult = true;
 		return r;
 	}
 
@@ -571,6 +603,57 @@ public class TCPMiddlewareConnectionHandler implements Runnable {
 		}
 		catch(InterruptedException ie) {
 			Trace.warn("MW::BUNDLE reserveItemsBundle thread interrupted");
+			return false;
+		}
+	}
+	
+	// Used by DELETE_CUSTOMER to cancel all of a customer's reservations
+	private boolean cancelItemSet(int xid, HashMap<String, Integer> reservationsMap) {
+		// Threads executor
+		ExecutorService executor = Executors.newFixedThreadPool(MAX_THREADS);
+		
+		TCPMessage request = TCPMessage.newCancelItemReservations(xid, reservationsMap);
+		
+		try {
+			// Cancel all reservations
+			Callable<Boolean> cancelFlights = () -> {
+				
+				// Send a CANCEL_ITEM_RESERVATIONS request to the flights server
+				TCPMessage response = forwardToFlights(request);
+				return response.booleanResult;
+			};
+			
+			Callable<Boolean> cancelCars = () -> {
+				
+				// Send a CANCEL_ITEM_RESERVATIONS request to the cars server
+				TCPMessage response = forwardToCars(request);
+				return response.booleanResult;
+			};
+			
+			Callable<Boolean> cancelRooms = () -> {
+				
+				// Send a CANCEL_ITEM_RESERVATIONS request to the rooms server
+				TCPMessage response = forwardToRooms(request);
+				return response.booleanResult;
+			};
+			
+			// Submit value-returning tasks for execution in separate threads
+			Future<Boolean> flightsFuture = executor.submit(cancelFlights);
+			Future<Boolean> carsFuture = executor.submit(cancelCars);
+			Future<Boolean> roomsFuture = executor.submit(cancelRooms);
+			
+			// Wait for previously submitted tasks to execute, and then terminate the executor
+			executor.awaitTermination(WAIT_RESPONSE, TimeUnit.SECONDS);
+		
+			// Get the results
+			boolean flightsResult = handleThreadResult(flightsFuture);
+			boolean carResult = handleThreadResult(carsFuture);
+			boolean roomResult = handleThreadResult(roomsFuture);
+
+			return flightsResult && carResult && roomResult;
+		}
+		catch(InterruptedException ie) {
+			Trace.warn("MW::Cancel reservations thread interrupted");
 			return false;
 		}
 	}
