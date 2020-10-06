@@ -525,8 +525,8 @@ public class Middleware implements IResourceManager
 		if (car) {	
 			// thread for reserving a car at a location
 			Callable<Boolean> checkCarCallback = () -> {
-				int price = queryCars(xid, location);
-				return price >= 0;	
+				int amount = queryCars(xid, location);
+				return amount > 0;
 			};
 			
 			// thread for reserving a car at a location
@@ -536,8 +536,8 @@ public class Middleware implements IResourceManager
 		if (room) {
 			// thread for reserving a  at a location
 			Callable<Boolean> checkRoomCallback = () -> {
-				int price = queryRooms(xid, location);
-				return price >= 0;	
+				int amount = queryRooms(xid, location);
+				return amount > 0;
 			};
 			
 			// thread for reserving a  at a location

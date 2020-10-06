@@ -415,7 +415,7 @@ public abstract class Client
 					break;
 				}
 
-				System.out.println("Reserving an bundle [xid=" + arguments.elementAt(1) + "]");
+				System.out.println("Reserving a bundle [xid=" + arguments.elementAt(1) + "]");
 				System.out.println("-Customer ID: " + arguments.elementAt(2));
 				for (int i = 0; i < arguments.size() - 6; ++i)
 				{
