@@ -383,7 +383,7 @@ public class ResourceManager implements IResourceManager
 		Vector<String> flightNumbers,
 		String location
 	) throws RemoteException {
-		Trace.info("RM::checkFlightList(" + xid + ", " + "[flightNumbers]" + ", " + location + ") called");
+		Trace.info("RM::checkFlightList(" + xid + ", " + "[flightNumbers]" + ", " + location + ") called");	
 
 		boolean isAvailable = true;
 		// hashmap to check if we are trying to reserve more seats than avaiable in the same flight	
@@ -400,7 +400,7 @@ public class ResourceManager implements IResourceManager
 			
 			// if the key is not in the hashmap, add <flight number, number of seats>
 			if (availableSeatsMap.get(Integer.parseInt(flightNum)) == null) {
-				availableSeatsMap.put(Integer.parseInt(flightNum), availableSeats);
+				availableSeatsMap.put(Integer.parseInt(flightNum), availableSeats - 1);
 			}
 			else { // otherwise decrease the number of seats
 				int seats = availableSeatsMap.get(Integer.parseInt(flightNum));
@@ -410,13 +410,14 @@ public class ResourceManager implements IResourceManager
 
 		
 		// iterate through the whole hashmap. If there is a negative value, a flight does not have enough seats
-		for (int value : availableSeatsMap.keySet()) {
+		for (int value : availableSeatsMap.values()) {	
 			if (value < 0) {
 				isAvailable = false;
 				break;
 			}
 		}
-		
+	
+		Trace.info("RM::checkFlightList RESULT: " + isAvailable);
 		return isAvailable;
 	}
 
