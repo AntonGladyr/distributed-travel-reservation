@@ -457,7 +457,7 @@ public abstract class Client
 				int xid = toInt(arguments.elementAt(1));
 				
 				System.out.println("Committing transaction [xid=" + xid + "]");
-				boolean success = m_resourceManager.commit();
+				boolean success = m_resourceManager.commit(xid);
 				
 				if (success) System.out.println("Transaction committed");
 				else System.out.println("Transaction commit failed");
@@ -468,7 +468,7 @@ public abstract class Client
 				int xid = toInt(arguments.elementAt(1));
 				
 				System.out.println("Aborting transaction [xid=" + xid + "]");
-				boolean success = m_resourceManager.abort();
+				boolean success = m_resourceManager.abort(xid);
 				
 				if (success) System.out.println("Transaction aborted");
 				else System.out.println("Transaction abort failed");

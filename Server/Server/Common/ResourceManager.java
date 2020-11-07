@@ -466,5 +466,23 @@ public class ResourceManager implements IResourceManager
 	{
 		return m_name;
 	}
+
+	@Override
+	public int start() throws RemoteException {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public boolean commit(int xid) throws RemoteException {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public boolean abort(int xid) throws RemoteException {
+		// TODO Auto-generated method stub
+		return false;
+	}
 }
  
