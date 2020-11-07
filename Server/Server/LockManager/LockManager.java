@@ -221,13 +221,41 @@ public class LockManager
 				}
 				else if (dataLockObject.getLockType() == TransactionLockObject.LockType.LOCK_WRITE)
 				{
+					// ----- START OF SECTION IMPLEMENTED BY OUR GROUP -----
+					
 					// Transaction already has a lock and is requesting a WRITE lock
+					
+					// Give the lock it already owns a clearer variable name
+					DataLockObject alreadyOwnedLock = l_dataLockObject;
+					
 					// now there are two cases to analyze here
-					// (1) transaction already had a READ lock
-					// (2) transaction already had a WRITE lock
-					// Seeing the comments at the top of this function might be helpful
-
-					//TODO: Lock conversion
+					
+					// (1) transaction already had a READ lock (and is requesting a WRITE lock)
+					if (alreadyOwnedLock.getLockType() == TransactionLockObject.LockType.LOCK_READ)
+					{
+						// Check whether any other transactions have a shared READ lock (would prevent conversion)
+						for (int j = 0; j < size; j++)
+						{
+							DataLockObject otherDataLock = (DataLockObject)vect.elementAt(j);
+							
+							// If the other lock is from another transaction and it is a READ lock, we can't convert (conflict)
+							if (dataLockObject.getXId() != otherDataLock.getXId()
+									&& otherDataLock.getLockType() == TransactionLockObject.LockType.LOCK_READ) return true;
+						}
+						
+						// If we get to this point, there are no other shared READ locks. It is safe to convert.
+						// Set the conversion bit and return "no conflicts"
+						bitset.set(0, true);
+						return false;
+					}
+					
+					// (2) transaction already had a WRITE lock (and is requesting a WRITE lock), so this lock request is redundant
+					else if (alreadyOwnedLock.getLockType() == TransactionLockObject.LockType.LOCK_WRITE)
+					{
+						throw new RedundantLockRequestException(dataLockObject.getXId(), "redundant WRITE lock request");
+					}
+					
+					// ----- END OF SECTION IMPLEMENTED BY OUR GROUP -----
 				}
 			} 
 			else if (dataLockObject.getLockType() == TransactionLockObject.LockType.LOCK_READ)
