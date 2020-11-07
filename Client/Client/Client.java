@@ -444,7 +444,7 @@ public abstract class Client
 				break;
 			}
 			case Start: {
-				checkArgumentsCount(0, arguments.size());
+				checkArgumentsCount(1, arguments.size());
 				
 				System.out.println("Starting a transaction");
 				int xid = m_resourceManager.start();
@@ -452,7 +452,7 @@ public abstract class Client
 				System.out.println("Transaction ID (xid): " + xid);
 			}
 			case Commit: {
-				checkArgumentsCount(1, arguments.size());
+				checkArgumentsCount(2, arguments.size());
 
 				int xid = toInt(arguments.elementAt(1));
 				
@@ -463,7 +463,7 @@ public abstract class Client
 				else System.out.println("Transaction commit failed");
 			}
 			case Abort: {
-				checkArgumentsCount(1, arguments.size());
+				checkArgumentsCount(2, arguments.size());
 
 				int xid = toInt(arguments.elementAt(1));
 				
