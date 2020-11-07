@@ -757,18 +757,21 @@ public class Middleware implements IResourceManager
 	@Override
 	public int start() throws RemoteException {
 		// TODO Auto-generated method stub
-		return 999;
+		Trace.info("MW::start() called");
+		return 0;
 	}
 
 	@Override
 	public boolean commit(int xid) throws RemoteException {
 		// TODO Auto-generated method stub
+		Trace.info("MW::commit(" + xid + ") called");
 		return false;
 	}
 
 	@Override
 	public boolean abort(int xid) throws RemoteException {
 		// TODO Auto-generated method stub
+		Trace.info("MW::abort(" + xid + ") called");
 		return false;
 	}
 }
