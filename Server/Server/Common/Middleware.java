@@ -95,12 +95,12 @@ public class Middleware implements IResourceManager
 	// Check if customer exists
 	public Customer getCustomer(int xid, int customerID)
 	{
-		Trace.info("RM::getCustomer(" + xid + ", customer=" + customerID + ") called" );
+		Trace.info("MW::getCustomer(" + xid + ", customer=" + customerID + ") called" );
 		// Read customer object if it exists (and read lock it)
 		Customer customer = (Customer)readData(xid, Customer.getKey(customerID));
 		if (customer == null)
 		{
-			Trace.warn("RM::getCustomer(" + xid + ", " + customerID + ")  failed--customer doesn't exist");	
+			Trace.warn("MW::getCustomer(" + xid + ", " + customerID + ")  failed--customer doesn't exist");	
 		}
 
 		return customer;
@@ -110,13 +110,13 @@ public class Middleware implements IResourceManager
 	// NOTE: if flightPrice <= 0 and the flight already exists, it maintains its current price
 	public boolean addFlight(int xid, int flightNum, int flightSeats, int flightPrice) throws RemoteException
 	{	
-		Trace.info("RM::addFlight(" + xid + ", " + flightNum + ", " + flightSeats + ", $" + flightPrice + ") called");
+		Trace.info("MW::addFlight(" + xid + ", " + flightNum + ", " + flightSeats + ", $" + flightPrice + ") called");
 		IResourceManager m_resourceManager = connectServer(flightsHost, portNum, flightsServerName);
 		if (m_resourceManager != null) {	
 			return m_resourceManager.addFlight(xid, flightNum, flightSeats, flightPrice);
 		}
 		else {
-			Trace.warn("RM::addFlight(" + xid + ", " + flightNum + ", " + flightSeats + ", $" + flightPrice + ")" + 
+			Trace.warn("MW::addFlight(" + xid + ", " + flightNum + ", " + flightSeats + ", $" + flightPrice + ")" + 
 				   "  could not connect to the resource manager server.");
 			return false;
 		}
@@ -126,13 +126,13 @@ public class Middleware implements IResourceManager
 	// NOTE: if price <= 0 and the location already exists, it maintains its current price
 	public boolean addCars(int xid, String location, int count, int price) throws RemoteException
 	{
-		Trace.info("RM::addCars(" + xid + ", " + location + ", " + count + ", $" + price + ") called");
+		Trace.info("MW::addCars(" + xid + ", " + location + ", " + count + ", $" + price + ") called");
 		IResourceManager m_resourceManager = connectServer(carsHost, portNum, carsServerName);
 		if (m_resourceManager != null) {	
 			return m_resourceManager.addCars(xid, location, count, price);
 		}
 		else {
-			Trace.warn("RM::addCars(" + xid + ", " + location + ", " + count + ", $" + price + ")" +
+			Trace.warn("MW::addCars(" + xid + ", " + location + ", " + count + ", $" + price + ")" +
 				   "  could not connect to the resource manager server.");
 			return false;
 		}
@@ -142,13 +142,13 @@ public class Middleware implements IResourceManager
 	// NOTE: if price <= 0 and the room location already exists, it maintains its current price
 	public boolean addRooms(int xid, String location, int count, int price) throws RemoteException
 	{
-		Trace.info("RM::addRooms(" + xid + ", " + location + ", " + count + ", $" + price + ") called");
+		Trace.info("MW::addRooms(" + xid + ", " + location + ", " + count + ", $" + price + ") called");
 		IResourceManager m_resourceManager = connectServer(roomsHost, portNum, roomsServerName);
 		if (m_resourceManager != null) {	
 			return m_resourceManager.addRooms(xid, location, count, price);
 		}
 		else {
-			Trace.warn("RM::addRooms(" + xid + ", " + location + ", " + count + ", $" + price + ")" + 
+			Trace.warn("MW::addRooms(" + xid + ", " + location + ", " + count + ", $" + price + ")" + 
 				   "  could not connect to the resource manager server.");
 			return false;
 		}
@@ -157,13 +157,13 @@ public class Middleware implements IResourceManager
 	// Deletes flight
 	public boolean deleteFlight(int xid, int flightNum) throws RemoteException
 	{
-		Trace.info("RM::deleteFlight(" + xid + ", " + flightNum + ") called");
+		Trace.info("MW::deleteFlight(" + xid + ", " + flightNum + ") called");
 		IResourceManager m_resourceManager = connectServer(flightsHost, portNum, flightsServerName);
 		if (m_resourceManager != null) {	
 			return m_resourceManager.deleteFlight(xid, flightNum);
 		}
 		else {
-			Trace.warn("RM::deleteFlight(" + xid + ", " + flightNum + ")" +
+			Trace.warn("MW::deleteFlight(" + xid + ", " + flightNum + ")" +
 				   "  could not connect to the resource manager server.");
 			return false;
 		}
@@ -172,13 +172,13 @@ public class Middleware implements IResourceManager
 	// Delete cars at a location
 	public boolean deleteCars(int xid, String location) throws RemoteException
 	{
-		Trace.info("RM::deleteCars(" + xid + ", " + location + ") called");
+		Trace.info("MW::deleteCars(" + xid + ", " + location + ") called");
 		IResourceManager m_resourceManager = connectServer(carsHost, portNum, carsServerName);
 		if (m_resourceManager != null) {
 			return m_resourceManager.deleteCars(xid, location);
 		}
 		else {
-			Trace.warn("RM::deleteCars(" + xid + ", " + location + ")" +
+			Trace.warn("MW::deleteCars(" + xid + ", " + location + ")" +
 				   "  could not connect to the resource manager server.");
 			return false;
 		}
@@ -187,13 +187,13 @@ public class Middleware implements IResourceManager
 	// Delete rooms at a location
 	public boolean deleteRooms(int xid, String location) throws RemoteException
 	{
-		Trace.info("RM::deleteRooms(" + xid + ", " + location + ") called");
+		Trace.info("MW::deleteRooms(" + xid + ", " + location + ") called");
 		IResourceManager m_resourceManager = connectServer(roomsHost, portNum, roomsServerName);
 		if (m_resourceManager != null) {	
 			return m_resourceManager.deleteRooms(xid, location);
 		}
 		else {
-			Trace.warn("RM::deleteRooms(" + xid + ", " + location + ")" + 
+			Trace.warn("MW::deleteRooms(" + xid + ", " + location + ")" + 
 				   "  could not connect to the resource manager server.");
 			return false;
 		}
@@ -202,13 +202,13 @@ public class Middleware implements IResourceManager
 	// Returns the number of empty seats in this flight
 	public int queryFlight(int xid, int flightNum) throws RemoteException
 	{
-		Trace.info("RM::queryFlight(" + xid + ", " + flightNum + ") called");
+		Trace.info("MW::queryFlight(" + xid + ", " + flightNum + ") called");
 		IResourceManager m_resourceManager = connectServer(flightsHost, portNum, flightsServerName);
 		if (m_resourceManager != null) {
 			return m_resourceManager.queryFlight(xid, flightNum);
 		}
 		else {
-			Trace.warn("RM::queryFlight(" + xid + ", " + flightNum + ")" + 
+			Trace.warn("MW::queryFlight(" + xid + ", " + flightNum + ")" + 
 				   "  could not connect to the resource manager server.");
 			return -1;
 		}
@@ -217,13 +217,13 @@ public class Middleware implements IResourceManager
 	// Returns the number of cars available at a location
 	public int queryCars(int xid, String location) throws RemoteException
 	{
-		Trace.info("RM::queryCars(" + xid + ", " + location + ") called");
+		Trace.info("MW::queryCars(" + xid + ", " + location + ") called");
 		IResourceManager m_resourceManager = connectServer(carsHost, portNum, carsServerName);
 		if (m_resourceManager != null) {	
 			return m_resourceManager.queryCars(xid, location);
 		}
 		else {
-			Trace.warn("RM::queryCars(" + xid + ", " + location + ")" +
+			Trace.warn("MW::queryCars(" + xid + ", " + location + ")" +
 				   "  could not connect to the resource manager server.");
 			return -1;
 		}
@@ -232,13 +232,13 @@ public class Middleware implements IResourceManager
 	// Returns the amount of rooms available at a location
 	public int queryRooms(int xid, String location) throws RemoteException
 	{
-		Trace.info("RM::queryRooms(" + xid + ", " + location + ") called");
+		Trace.info("MW::queryRooms(" + xid + ", " + location + ") called");
 		IResourceManager m_resourceManager = connectServer(roomsHost, portNum, roomsServerName);
 		if (m_resourceManager != null) {			
 			return m_resourceManager.queryRooms(xid, location);
 		}
 		else {
-			Trace.warn("RM::queryRooms(" + xid + ", " + location + ")" + 
+			Trace.warn("MW::queryRooms(" + xid + ", " + location + ")" + 
 				   "  could not connect to the resource manager server.");
 			return -1;
 		}
@@ -247,13 +247,13 @@ public class Middleware implements IResourceManager
 	// Returns price of a seat in this flight
 	public int queryFlightPrice(int xid, int flightNum) throws RemoteException
 	{
-		Trace.info("RM::queryFlightPrice(" + xid + ", " + flightNum + ") called");
+		Trace.info("MW::queryFlightPrice(" + xid + ", " + flightNum + ") called");
 		IResourceManager m_resourceManager = connectServer(flightsHost, portNum, flightsServerName);
 		if (m_resourceManager != null) {	
 			return m_resourceManager.queryFlightPrice(xid, flightNum);
 		}
 		else {
-			Trace.warn("RM::queryFlightPrice(" + xid + ", " + flightNum + ")" + 
+			Trace.warn("MW::queryFlightPrice(" + xid + ", " + flightNum + ")" + 
 				   "  could not connect to the resource manager server.");
 			return -1;
 		}
@@ -262,13 +262,13 @@ public class Middleware implements IResourceManager
 	// Returns price of cars at this location
 	public int queryCarsPrice(int xid, String location) throws RemoteException
 	{
-		Trace.info("RM::queryCarsPrice(" + xid + ", " + location + ") called");
+		Trace.info("MW::queryCarsPrice(" + xid + ", " + location + ") called");
 		IResourceManager m_resourceManager = connectServer(carsHost, portNum, carsServerName);
 		if (m_resourceManager != null) {	
 			return m_resourceManager.queryCarsPrice(xid, location);
 		}
 		else {
-			Trace.warn("RM::queryCarsPrice(" + xid + ", " + location + ")" +
+			Trace.warn("MW::queryCarsPrice(" + xid + ", " + location + ")" +
 				   "  could not connect to the resource manager server.");
 			return -1;
 		}
@@ -277,13 +277,13 @@ public class Middleware implements IResourceManager
 	// Returns room price at this location
 	public int queryRoomsPrice(int xid, String location) throws RemoteException
 	{
-		Trace.info("RM::queryRoomsPrice(" + xid + ", " + location + ") called");
+		Trace.info("MW::queryRoomsPrice(" + xid + ", " + location + ") called");
 		IResourceManager m_resourceManager = connectServer(roomsHost, portNum, roomsServerName);
 		if (m_resourceManager != null) {	
 			return m_resourceManager.queryRoomsPrice(xid, location);
 		}
 		else {
-			Trace.warn("RM::queryRoomsPrice(" + xid + ", " + location + ")" +
+			Trace.warn("MW::queryRoomsPrice(" + xid + ", " + location + ")" +
 				   "  could not connect to the resource manager server.");
 			return -1;
 		}
@@ -291,17 +291,17 @@ public class Middleware implements IResourceManager
 
 	public String queryCustomerInfo(int xid, int customerID) throws RemoteException
 	{
-		Trace.info("RM::queryCustomerInfo(" + xid + ", " + customerID + ") called");
+		Trace.info("MW::queryCustomerInfo(" + xid + ", " + customerID + ") called");
 		Customer customer = (Customer)readData(xid, Customer.getKey(customerID));
 		if (customer == null)
 		{
-			Trace.warn("RM::queryCustomerInfo(" + xid + ", " + customerID + ") failed--customer doesn't exist");
+			Trace.warn("MW::queryCustomerInfo(" + xid + ", " + customerID + ") failed--customer doesn't exist");
 			// NOTE: don't change this--WC counts on this value indicating a customer does not exist...
 			return "";
 		}
 		else
 		{
-			Trace.info("RM::queryCustomerInfo(" + xid + ", " + customerID + ")");
+			Trace.info("MW::queryCustomerInfo(" + xid + ", " + customerID + ")");
 			System.out.println(customer.getBill());
 			return customer.getBill();
 		}
@@ -309,42 +309,42 @@ public class Middleware implements IResourceManager
 
 	public int newCustomer(int xid) throws RemoteException
 	{
-        	Trace.info("RM::newCustomer(" + xid + ") called");
+        	Trace.info("MW::newCustomer(" + xid + ") called");
 		// Generate a globally unique ID for the new customer
 		int cid = Integer.parseInt(String.valueOf(xid) +
 			String.valueOf(Calendar.getInstance().get(Calendar.MILLISECOND)) +
 			String.valueOf(Math.round(Math.random() * 100 + 1)));
 		Customer customer = new Customer(cid);
 		writeData(xid, customer.getKey(), customer);
-		Trace.info("RM::newCustomer(" + cid + ") returns ID=" + cid);
+		Trace.info("MW::newCustomer(" + cid + ") returns ID=" + cid);
 		return cid;
 	}
 
 	public boolean newCustomer(int xid, int customerID) throws RemoteException
 	{
-		Trace.info("RM::newCustomer(" + xid + ", " + customerID + ") called");
+		Trace.info("MW::newCustomer(" + xid + ", " + customerID + ") called");
 		Customer customer = (Customer)readData(xid, Customer.getKey(customerID));
 		if (customer == null)
 		{
 			customer = new Customer(customerID);
 			writeData(xid, customer.getKey(), customer);
-			Trace.info("RM::newCustomer(" + xid + ", " + customerID + ") created a new customer");
+			Trace.info("MW::newCustomer(" + xid + ", " + customerID + ") created a new customer");
 			return true;
 		}
 		else
 		{
-			Trace.info("INFO: RM::newCustomer(" + xid + ", " + customerID + ") failed--customer already exists");
+			Trace.info("MW::newCustomer(" + xid + ", " + customerID + ") failed--customer already exists");
 			return false;
 		}
 	}
 		
 	public boolean deleteCustomer(int xid, int customerID) throws RemoteException
 	{
-		Trace.info("RM::deleteCustomer(" + xid + ", " + customerID + ") called");
+		Trace.info("MW::deleteCustomer(" + xid + ", " + customerID + ") called");
 		Customer customer = (Customer)readData(xid, Customer.getKey(customerID));
 		if (customer == null)
 		{
-			Trace.warn("RM::deleteCustomer(" + xid + ", " + customerID + ") failed--customer doesn't exist");
+			Trace.warn("MW::deleteCustomer(" + xid + ", " + customerID + ") failed--customer doesn't exist");
 			return false;
 		}
 		else
@@ -366,7 +366,7 @@ public class Middleware implements IResourceManager
 			
 			// Remove the customer from the storage
 			removeData(xid, customer.getKey());
-			Trace.info("RM::deleteCustomer(" + xid + ", " + customerID + ") succeeded");
+			Trace.info("MW::deleteCustomer(" + xid + ", " + customerID + ") succeeded");
 			return true;
 		}
 	}
@@ -374,7 +374,7 @@ public class Middleware implements IResourceManager
 	// Adds flight reservation to this customer
 	public int reserveFlight(int xid, int customerID, int flightNum) throws RemoteException
 	{
-		Trace.info("RM::reserveFlight(" + xid + ", " + customerID + ", " + flightNum + ") called");
+		Trace.info("MW::reserveFlight(" + xid + ", " + customerID + ", " + flightNum + ") called");
 		Customer customer = getCustomer(xid, customerID);
 		// if customer does not exist, return -1
 		if (customer == null) return -1;
@@ -397,7 +397,7 @@ public class Middleware implements IResourceManager
 	// Adds car reservation to this customer	
 	public int reserveCar(int xid, int customerID, String location) throws RemoteException
 	{
-		Trace.info("RM::reserveCar(" + xid + ", " + customerID + ", " + location + ") called");
+		Trace.info("MW::reserveCar(" + xid + ", " + customerID + ", " + location + ") called");
 		Customer customer = getCustomer(xid, customerID);
 		// if customer does not exist, return false
 		if (customer == null) return -1;	
@@ -421,7 +421,7 @@ public class Middleware implements IResourceManager
 	// Adds room reservation to this customer
 	public int reserveRoom(int xid, int customerID, String location) throws RemoteException
 	{
-		Trace.info("RM::reserveRoom(" + xid + ", " + customerID + ", " + location + ") called");
+		Trace.info("MW::reserveRoom(" + xid + ", " + customerID + ", " + location + ") called");
 		Customer customer = getCustomer(xid, customerID);
 		// if customer does not exist, return false
 		if (customer == null) return -1;
@@ -450,7 +450,7 @@ public class Middleware implements IResourceManager
 		boolean car,
 		boolean room
 	) throws RemoteException {
-		Trace.info("RM::bundle(" + xid + ", " + customerId + ", " +
+		Trace.info("MW::bundle(" + xid + ", " + customerId + ", " +
 					   flightNumbers.toString() + "," + location + ", " + car + ", " + room + ") called");
 		if (flightNumbers.isEmpty()) return false;
 			
@@ -492,7 +492,7 @@ public class Middleware implements IResourceManager
 		boolean car, 
 		boolean room
 	) throws RemoteException {
-		Trace.info("RM::bundle[checkItemsAvailability](" + xid + ", " + customerId + ", " +
+		Trace.info("MW::bundle[checkItemsAvailability](" + xid + ", " + customerId + ", " +
 					   flightNumbers.toString() + "," + location + ", " + car + ", " + room + ") called");
 		boolean flightsResult = true;
 		boolean carResult = true;
@@ -512,7 +512,7 @@ public class Middleware implements IResourceManager
 		
 		if (!flightNumbers.isEmpty()) {
 			Callable<Boolean> checkFlightsCallback = () -> {	
-				Trace.info("RM::checkFlightList(" + xid + ", " + flightNumbers + ", " + location + ") called");
+				Trace.info("MW::checkFlightList(" + xid + ", " + flightNumbers + ", " + location + ") called");
 				IResourceManager m_resourceManager = connectServer(flightsHost, portNum, flightsServerName);
 				if (m_resourceManager == null) return false;	
 				return m_resourceManager.checkFlightList(xid, flightNumbers, location);
@@ -564,7 +564,7 @@ public class Middleware implements IResourceManager
 		boolean car, 
 		boolean room
 	) throws RemoteException {
-		Trace.info("RM::bundle[reserveItemsBunlde](" + xid + ", " + customerId + ", " +
+		Trace.info("MW::bundle[reserveItemsBunlde](" + xid + ", " + customerId + ", " +
 					   flightNumbers.toString() + "," + location + ", " + car + ", " + room + ") called");
 		
 		boolean flightsResult = true;
@@ -586,7 +586,7 @@ public class Middleware implements IResourceManager
 		// check if the vector is empty	
 		if (!flightNumbers.isEmpty()) {	
 			Callable<Boolean> reserveFlightsCallback = () -> {
-				Trace.info("RM::reserveFlightList(" + xid + ", " + customerId +
+				Trace.info("MW::reserveFlightList(" + xid + ", " + customerId +
 					   ", " + flightNumbers + ", " + location + ") called");
 				
 				IResourceManager m_resourceManager = connectServer(flightsHost, portNum, flightsServerName);
@@ -610,7 +610,7 @@ public class Middleware implements IResourceManager
 		
 		if (car) {	
 			Callable<Boolean> reserveCarCallback = () -> {
-				Trace.info("RM::reserveCar(" + xid + ", " + customerId + ", " + location + ") called");
+				Trace.info("MW::reserveCar(" + xid + ", " + customerId + ", " + location + ") called");
 						
 				int price = reserveCar(xid, customerId, location);
 				if (price == -1) return false;
@@ -626,7 +626,7 @@ public class Middleware implements IResourceManager
 
 		if (room) {	
 			Callable<Boolean> reserveRoomCallback = () -> {
-				Trace.info("RM::reserveRoom(" + xid + ", " + customerId + ", " + location + ") called");
+				Trace.info("MW::reserveRoom(" + xid + ", " + customerId + ", " + location + ") called");
 					
 				int price = reserveRoom(xid, customerId, location);
 				if (price == -1) return false;
@@ -702,22 +702,22 @@ public class Middleware implements IResourceManager
 			itemsResult = itemsFuture.get(WAIT_RESPONSE, TimeUnit.SECONDS);
 		}
 		catch(TimeoutException e) {
-			Trace.warn("RM::Thread timeout exception");
+			Trace.warn("MW::Thread timeout exception");
 			itemsFuture.cancel(true);
 			return false;
 		}
 		catch(InterruptedException e) {
-			Trace.warn("RM::Thread interrupted exception");
+			Trace.warn("MW::Thread interrupted exception");
 			itemsFuture.cancel(true);
 			return false;
 		}
 		catch(ExecutionException e) {
-			Trace.warn("RM::Thread execution exception");
+			Trace.warn("MW::Thread execution exception");
 			itemsFuture.cancel(true);
 			return false;
 		}
 		catch(CancellationException e) {
-			Trace.warn("RM::Thread cancellation exception");
+			Trace.warn("MW::Thread cancellation exception");
 			return false;
 		}
 		
