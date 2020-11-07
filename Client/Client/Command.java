@@ -28,6 +28,10 @@ public enum Command {
 	ReserveRoom("Reserve a room for a customer at a location", "<xid>,<CustomerID>,<Location>"),
 
 	Bundle("Book N flight numbers, and optionally a room and/or car at a location", "<xid>,<CustomerID>,<FlightNumber1>...<FlightNumberN>,<Location>,<Car-Y/N>,<Room-Y/N>"),
+	
+	Start("Start a new transaction", ""),
+	Commit("Commit the specified transaction", "<xid>"),
+	Abort("Abort the specified transaction", "<xid>"),
 
 	Quit("Exit the client application", "");
 
@@ -66,7 +70,8 @@ public enum Command {
 	public String toString()
 	{
 		String ret = name() + ": " + m_description + "\n";
-		ret += "Usage: " + name() + "," + m_args;
+		if (m_args.equals("")) ret += "Usage: " + name();
+		else ret += "Usage: " + name() + "," + m_args;
 		return ret;
 	}
 }             

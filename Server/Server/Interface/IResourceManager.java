@@ -185,7 +185,7 @@ public interface IResourceManager extends Remote
     public int reserveCar(int id, int customerID, String location)
 	throws RemoteException; 
 
-     /**
+    /**
      * Reserve a room at this location.
      *
      * @return Success
@@ -224,6 +224,30 @@ public interface IResourceManager extends Remote
      */
      public boolean cancelItemReservations(int xid, HashMap<String, Integer> reservedKeysMap)
 	throws RemoteException;
+     
+    /**
+     * Start a new transaction.
+     *
+     * @return Transaction ID
+     */
+    public int start()
+    throws RemoteException;
+    
+    /**
+     * Commit a transaction.
+     *
+     * @return Success
+     */
+    public boolean commit(int xid)
+    throws RemoteException;
+    
+    /**
+     * Abort a transaction.
+     *
+     * @return Success
+     */
+    public boolean abort(int xid)
+    throws RemoteException;
 
     /**
      * Convenience for probing the resource manager.

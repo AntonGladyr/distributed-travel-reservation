@@ -24,6 +24,7 @@ public class TCPResourceManager implements IResourceManager {
 	private String communicationError = "Communication error; no response received.";
 	private String errorResponse = "Issue on the server; error response recieved.";
 	private String notAvailable = "Request not available directly from the client";
+	private String notImplemented = "Request not implemented for TCP";
 
 	// Constructor
 	public TCPResourceManager(String server, int port) {
@@ -376,5 +377,20 @@ public class TCPResourceManager implements IResourceManager {
 	@Override
 	public boolean cancelItemReservations(int xid, HashMap<String, Integer> reservedKeysMap) throws RemoteException {
 		throw new RemoteException(notAvailable);
+	}
+
+	@Override
+	public int start() throws RemoteException {
+		throw new RemoteException(notImplemented);
+	}
+
+	@Override
+	public boolean commit(int xid) throws RemoteException {
+		throw new RemoteException(notImplemented);
+	}
+
+	@Override
+	public boolean abort(int xid) throws RemoteException {
+		throw new RemoteException(notImplemented);
 	}
 }

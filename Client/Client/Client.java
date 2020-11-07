@@ -443,6 +443,36 @@ public abstract class Client
 				}
 				break;
 			}
+			case Start: {
+				checkArgumentsCount(0, arguments.size());
+				
+				System.out.println("Starting a transaction");
+				int xid = m_resourceManager.start();
+				
+				System.out.println("Transaction ID (xid): " + xid);
+			}
+			case Commit: {
+				checkArgumentsCount(1, arguments.size());
+
+				int xid = toInt(arguments.elementAt(1));
+				
+				System.out.println("Committing transaction [xid=" + xid + "]");
+				boolean success = m_resourceManager.commit();
+				
+				if (success) System.out.println("Transaction committed");
+				else System.out.println("Transaction commit failed");
+			}
+			case Abort: {
+				checkArgumentsCount(1, arguments.size());
+
+				int xid = toInt(arguments.elementAt(1));
+				
+				System.out.println("Aborting transaction [xid=" + xid + "]");
+				boolean success = m_resourceManager.abort();
+				
+				if (success) System.out.println("Transaction aborted");
+				else System.out.println("Transaction abort failed");
+			}
 			case Quit:
 				checkArgumentsCount(1, arguments.size());
 

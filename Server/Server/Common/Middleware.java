@@ -753,4 +753,22 @@ public class Middleware implements IResourceManager
 
 		return m_resourceManager;
 	}
+
+	@Override
+	public int start() throws RemoteException {
+		// TODO Auto-generated method stub
+		return 999;
+	}
+
+	@Override
+	public boolean commit(int xid) throws RemoteException {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public boolean abort(int xid) throws RemoteException {
+		// TODO Auto-generated method stub
+		return false;
+	}
 }
