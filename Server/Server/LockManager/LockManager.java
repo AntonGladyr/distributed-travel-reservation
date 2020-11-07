@@ -63,8 +63,26 @@ public class LockManager
 						}
 
 						if (bConvert.get(0) == true) {
-							//TODO: Lock conversion 
-							// Trace.info("LM::lock(" + xid + ", " + data + ", " + lockType + ") converted");
+							// ----- START OF SECTION IMPLEMENTED BY OUR GROUP -----
+							
+							// Lock conversion
+							
+							// Find and remove the old lock from the table
+							Vector<TransactionObject> vect = this.lockTable.elements(dataLockObject);
+							
+							for (int i = 0; i < vect.size(); i++)
+							{
+								TransactionObject oldLock = vect.elementAt(i);
+								if (oldLock.getXId() == xid) this.lockTable.remove(oldLock);
+							}
+							
+							// Add the new lock to the table
+							this.lockTable.add(xLockObject);
+							this.lockTable.add(dataLockObject);
+							
+							// ----- END OF SECTION IMPLEMENTED BY OUR GROUP -----
+							
+							Trace.info("LM::lock(" + xid + ", " + data + ", " + lockType + ") converted");
 						} else {
 							// Lock request that is not lock conversion
 							this.lockTable.add(xLockObject);
