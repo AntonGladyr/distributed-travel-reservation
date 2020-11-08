@@ -5,6 +5,9 @@ import java.rmi.RemoteException;
 
 import java.util.*;
 
+import Transactions.InvalidTransactionException;
+import Transactions.TransactionAbortedException;
+
 /** 
  * Simplified version from CSE 593 Univ. of Washington
  *
@@ -141,9 +144,11 @@ public interface IResourceManager extends Remote
      * Query the customer reservations.
      *
      * @return A formatted bill for the customer
+     * @throws TransactionAbortedException 
+     * @throws InvalidTransactionException 
      */
     public String queryCustomerInfo(int id, int customerID) 
-	throws RemoteException; 
+	throws RemoteException, InvalidTransactionException, TransactionAbortedException; 
     
     /**
      * Query the status of a flight.

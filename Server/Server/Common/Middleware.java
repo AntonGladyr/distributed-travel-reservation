@@ -98,17 +98,11 @@ public class Middleware implements IResourceManager
 	}
 	
 	// Check if customer exists
-	public Customer getCustomer(int xid, int customerID) throws InvalidTransactionException, TransactionAbortedException
+	public Customer getCustomer(int xid, int customerID)
 	{
 		Trace.info("MW::getCustomer(" + xid + ", customer=" + customerID + ") called" );
 		
-		// Validate xid
-		TransactionManager.validateXID(xid);
-		
-		// READ lock
-		TransactionManager.readLockCustomer(xid, customerID);
-		
-		// Read customer object if it exists
+        // Read customer object if it exists (and read lock it)
 		Customer customer = (Customer)readData(xid, Customer.getKey(customerID));
 		
 		if (customer == null)
@@ -302,9 +296,16 @@ public class Middleware implements IResourceManager
 		}
 	}
 
-	public String queryCustomerInfo(int xid, int customerID) throws RemoteException
+	public String queryCustomerInfo(int xid, int customerID) throws RemoteException, InvalidTransactionException, TransactionAbortedException
 	{
 		Trace.info("MW::queryCustomerInfo(" + xid + ", " + customerID + ") called");
+		
+		// Validate xid
+		TransactionManager.validateXID(xid);
+		
+		// READ lock
+		TransactionManager.readLockCustomer(xid, customerID);
+		
 		Customer customer = (Customer)readData(xid, Customer.getKey(customerID));
 		if (customer == null)
 		{
