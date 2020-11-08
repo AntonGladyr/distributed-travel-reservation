@@ -2,6 +2,9 @@ package Transactions;
 
 import java.util.HashMap;
 
+import Server.Common.ResourceManager;
+import Server.Common.Trace;
+
 public class TransactionManager {
 	
 	private static Integer transactionCounter = 0;
@@ -22,5 +25,15 @@ public class TransactionManager {
 		activeTransactions.put(newXID, new Transaction(newXID));
 		
 		return newXID;
+	}
+	
+	public void addRMtoT(int xid, ResourceManager resourceManager) {
+		//check if transaction is active
+		if (activeTransactions.containsKey(xid)) {
+			activeTransactions.get(xid).addRM(resourceManager); //add RM to transaction
+		}
+		else {
+			Trace.info("TransactionManager::addRMtoT() trying to add rm to non-active transaction");
+		}
 	}
 }
