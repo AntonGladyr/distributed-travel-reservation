@@ -401,7 +401,7 @@ public class ResourceManager implements IResourceManager
 			
 			// if the key is not in the hashmap, add <flight number, number of seats>
 			if (availableSeatsMap.get(Integer.parseInt(flightNum)) == null) {
-				availableSeatsMap.put(Integer.parseInt(flightNum), availableSeats);
+				availableSeatsMap.put(Integer.parseInt(flightNum), availableSeats - 1);
 			}
 			else { // otherwise decrease the number of seats
 				int seats = availableSeatsMap.get(Integer.parseInt(flightNum));
@@ -411,12 +411,12 @@ public class ResourceManager implements IResourceManager
 
 		
 		// iterate through the whole hashmap. If there is a negative value, a flight does not have enough seats
-		for (int value : availableSeatsMap.keySet()) {
+		for (int value : availableSeatsMap.values()) {
 			if (value < 0) {
 				isAvailable = false;
 				break;
 			}
-		}
+		}	
 		
 		return isAvailable;
 	}

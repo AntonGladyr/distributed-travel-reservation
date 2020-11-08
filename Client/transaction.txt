@@ -1,0 +1,3 @@
+AddCustomerID,3,3
+DeleteCustomer,3,3
+quit
