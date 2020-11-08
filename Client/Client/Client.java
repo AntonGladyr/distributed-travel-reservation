@@ -1,8 +1,8 @@
 package Client;
 
+import Server.Common.InvalidTransactionException;
+import Server.Common.TransactionAbortedException;
 import Server.Interface.*;
-import Transactions.InvalidTransactionException;
-import Transactions.TransactionAbortedException;
 
 import java.util.*;
 import java.io.*;

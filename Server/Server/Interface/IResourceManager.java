@@ -5,8 +5,8 @@ import java.rmi.RemoteException;
 
 import java.util.*;
 
-import Transactions.InvalidTransactionException;
-import Transactions.TransactionAbortedException;
+import Server.Common.InvalidTransactionException;
+import Server.Common.TransactionAbortedException;
 
 /** 
  * Simplified version from CSE 593 Univ. of Washington

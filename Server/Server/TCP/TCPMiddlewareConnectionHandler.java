@@ -17,15 +17,15 @@ import java.util.concurrent.TimeUnit;
 import Server.Common.Car;
 import Server.Common.Customer;
 import Server.Common.Flight;
+import Server.Common.InvalidTransactionException;
 import Server.Common.Middleware;
 import Server.Common.RMHashMap;
 import Server.Common.ReservedItem;
 import Server.Common.Room;
 import Server.Common.Trace;
+import Server.Common.TransactionAbortedException;
 import Server.Interface.MessageType;
 import Server.Interface.TCPMessage;
-import Transactions.InvalidTransactionException;
-import Transactions.TransactionAbortedException;
 
 public class TCPMiddlewareConnectionHandler implements Runnable {
 
