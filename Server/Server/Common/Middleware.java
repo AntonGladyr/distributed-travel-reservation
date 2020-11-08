@@ -6,6 +6,9 @@
 package Server.Common;
 
 import Server.Interface.*;
+import Server.LockManager.DeadlockException;
+import Transactions.InvalidTransactionException;
+import Transactions.TransactionAbortedException;
 import Transactions.TransactionManager;
 
 import java.rmi.registry.LocateRegistry;
@@ -95,11 +98,19 @@ public class Middleware implements IResourceManager
 	}
 	
 	// Check if customer exists
-	public Customer getCustomer(int xid, int customerID)
+	public Customer getCustomer(int xid, int customerID) throws InvalidTransactionException, TransactionAbortedException
 	{
 		Trace.info("MW::getCustomer(" + xid + ", customer=" + customerID + ") called" );
-		// Read customer object if it exists (and read lock it)
+		
+		// Validate xid
+		TransactionManager.validateXID(xid);
+		
+		// READ lock
+		TransactionManager.readLockCustomer(xid, customerID);
+		
+		// Read customer object if it exists
 		Customer customer = (Customer)readData(xid, Customer.getKey(customerID));
+		
 		if (customer == null)
 		{
 			Trace.warn("MW::getCustomer(" + xid + ", " + customerID + ")  failed--customer doesn't exist");	

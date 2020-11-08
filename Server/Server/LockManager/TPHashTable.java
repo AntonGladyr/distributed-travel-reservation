@@ -42,6 +42,7 @@ public class TPHashTable
 		vectSlot.addElement(xobj);
 	}
 
+	// If you pass a DataLockObject to the elements function, it will return a vector of locks on the same data. Otherwise, it will return a vector of locks of the same transaction.
 	public synchronized Vector<TransactionObject> elements(TransactionObject xobj)
 	{
 		if (xobj == null) return (new Vector<TransactionObject>());
