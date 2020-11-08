@@ -6,6 +6,8 @@
 package Server.Common;
 
 import Server.Interface.*;
+import Transactions.TransactionManager;
+
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 
@@ -754,11 +756,17 @@ public class Middleware implements IResourceManager
 		return m_resourceManager;
 	}
 
+	// Starts a new transaction
 	@Override
 	public int start() throws RemoteException {
-		// TODO Auto-generated method stub
+		
 		Trace.info("MW::start() called");
-		return 0;
+		
+		int xid = TransactionManager.start();
+		
+		Trace.info("MW::starting new transaction " + xid);
+		
+		return xid;
 	}
 
 	@Override
