@@ -62,17 +62,21 @@ public interface IResourceManager extends Remote
      * Add customer.
      *
      * @return Unique customer identifier
+     * @throws TransactionAbortedException 
+     * @throws InvalidTransactionException 
      */
     public int newCustomer(int id) 
-	throws RemoteException; 
+	throws RemoteException, InvalidTransactionException, TransactionAbortedException; 
     
     /**
      * Add customer with id.
      *
      * @return Success
+     * @throws TransactionAbortedException 
+     * @throws InvalidTransactionException 
      */
     public boolean newCustomer(int id, int cid)
-        throws RemoteException;
+        throws RemoteException, InvalidTransactionException, TransactionAbortedException;
 
     /**
      * Delete the flight.
@@ -109,9 +113,11 @@ public interface IResourceManager extends Remote
      * Delete a customer and associated reservations.
      *
      * @return Success
+     * @throws TransactionAbortedException 
+     * @throws InvalidTransactionException 
      */
     public boolean deleteCustomer(int id, int customerID) 
-	throws RemoteException; 
+	throws RemoteException, InvalidTransactionException, TransactionAbortedException; 
 
     /**
      * Query the status of a flight.

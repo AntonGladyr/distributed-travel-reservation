@@ -318,22 +318,39 @@ public class Middleware implements IResourceManager
 		}
 	}
 
-	public int newCustomer(int xid) throws RemoteException
+	public int newCustomer(int xid) throws RemoteException, InvalidTransactionException, TransactionAbortedException
 	{
-        	Trace.info("MW::newCustomer(" + xid + ") called");
+        Trace.info("MW::newCustomer(" + xid + ") called");
+        
+		// Validate xid
+		TransactionManager.validateXID(xid);
+        
 		// Generate a globally unique ID for the new customer
 		int cid = Integer.parseInt(String.valueOf(xid) +
 			String.valueOf(Calendar.getInstance().get(Calendar.MILLISECOND)) +
 			String.valueOf(Math.round(Math.random() * 100 + 1)));
+		
+		// WRITE lock
+		TransactionManager.writeLockCustomer(xid, cid);
+		
 		Customer customer = new Customer(cid);
+		
 		writeData(xid, customer.getKey(), customer);
+		
 		Trace.info("MW::newCustomer(" + cid + ") returns ID=" + cid);
 		return cid;
 	}
 
-	public boolean newCustomer(int xid, int customerID) throws RemoteException
+	public boolean newCustomer(int xid, int customerID) throws RemoteException, InvalidTransactionException, TransactionAbortedException
 	{
 		Trace.info("MW::newCustomer(" + xid + ", " + customerID + ") called");
+		
+		// Validate xid
+		TransactionManager.validateXID(xid);
+		
+		// WRITE lock
+		TransactionManager.writeLockCustomer(xid, customerID);
+		
 		Customer customer = (Customer)readData(xid, Customer.getKey(customerID));
 		if (customer == null)
 		{
@@ -349,9 +366,16 @@ public class Middleware implements IResourceManager
 		}
 	}
 		
-	public boolean deleteCustomer(int xid, int customerID) throws RemoteException
+	public boolean deleteCustomer(int xid, int customerID) throws RemoteException, InvalidTransactionException, TransactionAbortedException
 	{
 		Trace.info("MW::deleteCustomer(" + xid + ", " + customerID + ") called");
+		
+		// Validate xid
+		TransactionManager.validateXID(xid);
+		
+		// WRITE lock
+		TransactionManager.writeLockCustomer(xid, customerID);
+		
 		Customer customer = (Customer)readData(xid, Customer.getKey(customerID));
 		if (customer == null)
 		{

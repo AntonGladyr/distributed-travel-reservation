@@ -52,6 +52,15 @@ public class TransactionManager {
 			handleDeadlock(xid);
 		}
 	}
+	
+	// Requests a WRITE lock on a customer
+	public static void writeLockCustomer(int xid, int customerID) throws TransactionAbortedException {
+		try {
+			customerLockManager.Lock(xid, Integer.toString(customerID), TransactionLockObject.LockType.LOCK_WRITE);
+		} catch (DeadlockException e) {
+			handleDeadlock(xid);
+		}
+	}
 
 	// Aborts a transaction
 	public static void abort(int xid) {

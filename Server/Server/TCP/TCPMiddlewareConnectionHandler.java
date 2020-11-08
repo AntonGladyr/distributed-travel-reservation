@@ -255,7 +255,7 @@ public class TCPMiddlewareConnectionHandler implements Runnable {
 	}
 	
 	// Handles messages of type NEW_CUSTOMER
-	private TCPMessage handleAddNewCust(TCPMessage r) throws RemoteException {
+	private TCPMessage handleAddNewCust(TCPMessage r) throws RemoteException, InvalidTransactionException, TransactionAbortedException {
 		Trace.info("MW::Received NEW_CUSTOMER request from [" + clientHost + ":" + clientPort + "], processing locally");
 
 		r.intResult = middleware.newCustomer(r.id);
@@ -263,7 +263,7 @@ public class TCPMiddlewareConnectionHandler implements Runnable {
 	}
 
 	// Handles messages of type NEW_CUSTOMER_ID
-	private TCPMessage handleAddNewCustID(TCPMessage r) throws RemoteException {
+	private TCPMessage handleAddNewCustID(TCPMessage r) throws RemoteException, InvalidTransactionException, TransactionAbortedException {
 		Trace.info("MW::Received NEW_CUSTOMER_ID request from [" + clientHost + ":" + clientPort + "], processing locally");
 
 		r.booleanResult = middleware.newCustomer(r.id, r.cid);
