@@ -1,6 +1,8 @@
 package Client;
 
 import Server.Interface.*;
+import Transactions.InvalidTransactionException;
+import Transactions.TransactionAbortedException;
 
 import java.util.*;
 import java.io.*;
@@ -67,7 +69,7 @@ public abstract class Client
 		}
 	}
 
-	public void execute(Command cmd, Vector<String> arguments) throws RemoteException, NumberFormatException
+	public void execute(Command cmd, Vector<String> arguments) throws RemoteException, NumberFormatException, InvalidTransactionException, TransactionAbortedException
 	{
 		switch (cmd)
 		{

@@ -24,6 +24,8 @@ import Server.Common.Room;
 import Server.Common.Trace;
 import Server.Interface.MessageType;
 import Server.Interface.TCPMessage;
+import Transactions.InvalidTransactionException;
+import Transactions.TransactionAbortedException;
 
 public class TCPMiddlewareConnectionHandler implements Runnable {
 
@@ -245,7 +247,7 @@ public class TCPMiddlewareConnectionHandler implements Runnable {
 	}
 
 	// Handles messages of type QUERY_CUSTOMER_INFO
-	private TCPMessage handleQueryCustomerInfo(TCPMessage r) throws RemoteException {
+	private TCPMessage handleQueryCustomerInfo(TCPMessage r) throws RemoteException, InvalidTransactionException, TransactionAbortedException {
 		Trace.info("MW::Received QUERY_CUSTOMER_INFO request from [" + clientHost + ":" + clientPort + "], processing locally");
 
 		r.stringResult = middleware.queryCustomerInfo(r.id, r.customerID);
