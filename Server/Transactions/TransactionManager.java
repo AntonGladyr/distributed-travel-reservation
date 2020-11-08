@@ -1,7 +1,6 @@
 package Transactions;
 
 import java.util.HashMap;
-import Server.*;
 
 public class TransactionManager {
 	
