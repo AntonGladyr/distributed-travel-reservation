@@ -1,4 +1,4 @@
-package Server.Common;
+package Server.Interface;
 
 public class InvalidTransactionException extends Exception {
 
