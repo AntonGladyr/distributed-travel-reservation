@@ -7,12 +7,13 @@
 //import java.util.concurrent.Executors;
 //
 //import Server.Common.Middleware;
+//import Server.Interface.Port;
 //
 //public class TCPMiddleware extends Middleware {
 //
 //	private static String s_serverName = "Middleware";
 //	
-//	private static int port = 33304;
+//	private static int port = Port.getPort();
 //
 //	public static void main(String args[]) {
 //		

@@ -10,7 +10,7 @@ import java.rmi.NotBoundException;
 public class RMIClient extends Client
 {
 	private static String s_serverHost = "localhost";
-	private static int s_serverPort = 33304;
+	private static int s_serverPort = Port.getPort();
 	private static String s_serverName = "Server";
 
 	// group number as unique identifier

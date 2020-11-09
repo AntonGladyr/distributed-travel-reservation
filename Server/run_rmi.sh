@@ -1,1 +1,2 @@
-rmiregistry -J-Djava.rmi.server.useCodebaseOnly=false 33304 &
+port="$(cat PORT)"
+rmiregistry -J-Djava.rmi.server.useCodebaseOnly=false $port &
