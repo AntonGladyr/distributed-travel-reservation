@@ -165,9 +165,13 @@ public class Middleware implements IResourceManager
 	}
 
 	// Deletes flight
-	public boolean deleteFlight(int xid, int flightNum) throws RemoteException
+	public boolean deleteFlight(int xid, int flightNum) throws RemoteException, InvalidTransactionException, TransactionAbortedException
 	{
 		Trace.info("MW::deleteFlight(" + xid + ", " + flightNum + ") called");
+		
+		TransactionManager.validateXID(xid);
+		TransactionManager.writeLockFlight(xid, flightNum);
+		
 		IResourceManager m_resourceManager = connectServer(flightsHost, portNum, flightsServerName);
 		if (m_resourceManager != null) {	
 			return m_resourceManager.deleteFlight(xid, flightNum);

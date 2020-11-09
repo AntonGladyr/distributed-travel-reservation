@@ -87,9 +87,11 @@ public interface IResourceManager extends Remote
      * reservation on the flight, then the flight cannot be deleted
      *
      * @return Success
+     * @throws InvalidTransactionException 
+     * @throws TransactionAbortedException 
      */   
     public boolean deleteFlight(int id, int flightNum) 
-	throws RemoteException; 
+	throws RemoteException, InvalidTransactionException, TransactionAbortedException; 
     
     /**
      * Delete all cars at a location.
@@ -125,9 +127,11 @@ public interface IResourceManager extends Remote
      * Query the status of a flight.
      *
      * @return Number of empty seats
+     * @throws InvalidTransactionException 
+     * @throws TransactionAbortedException 
      */
     public int queryFlight(int id, int flightNumber) 
-	throws RemoteException; 
+	throws RemoteException, TransactionAbortedException, InvalidTransactionException; 
 
     /**
      * Query the status of a car location.
@@ -159,9 +163,11 @@ public interface IResourceManager extends Remote
      * Query the status of a flight.
      *
      * @return Price of a seat in this flight
+     * @throws InvalidTransactionException 
+     * @throws TransactionAbortedException 
      */
     public int queryFlightPrice(int id, int flightNumber) 
-	throws RemoteException; 
+	throws RemoteException, TransactionAbortedException, InvalidTransactionException; 
 
     /**
      * Query the status of a car location.

@@ -136,8 +136,10 @@ public class ResourceManager implements IResourceManager
 
 	// Create a new flight, or add seats to existing flight
 	// NOTE: if flightPrice <= 0 and the flight already exists, it maintains its current price
-	public boolean addFlight(int xid, int flightNum, int flightSeats, int flightPrice) throws RemoteException
+	public boolean addFlight(int xid, int flightNum, int flightSeats, int flightPrice) throws RemoteException, TransactionAbortedException, InvalidTransactionException
 	{
+		TransactionManager.validateXID(xid);
+		TransactionManager.writeLockFlight(xid, flightNum);
 		Trace.info("RM::addFlight(" + xid + ", " + flightNum + ", " + flightSeats + ", $" + flightPrice + ") called");
 		Flight curObj = (Flight)readData(xid, Flight.getKey(flightNum));
 		if (curObj == null)
@@ -214,8 +216,10 @@ public class ResourceManager implements IResourceManager
 	}
 
 	// Deletes flight
-	public boolean deleteFlight(int xid, int flightNum) throws RemoteException
+	public boolean deleteFlight(int xid, int flightNum) throws RemoteException, TransactionAbortedException, InvalidTransactionException
 	{
+		TransactionManager.validateXID(xid);
+		TransactionManager.writeLockFlight(xid, flightNum);
 		return deleteItem(xid, Flight.getKey(flightNum));
 	}
 
@@ -232,8 +236,10 @@ public class ResourceManager implements IResourceManager
 	}
 
 	// Returns the number of empty seats in this flight
-	public int queryFlight(int xid, int flightNum) throws RemoteException
+	public int queryFlight(int xid, int flightNum) throws RemoteException, TransactionAbortedException, InvalidTransactionException
 	{
+		TransactionManager.validateXID(xid);
+		TransactionManager.readLockFlight(xid, flightNum);
 		return queryNum(xid, Flight.getKey(flightNum));
 	}
 
@@ -250,8 +256,10 @@ public class ResourceManager implements IResourceManager
 	}
 
 	// Returns price of a seat in this flight
-	public int queryFlightPrice(int xid, int flightNum) throws RemoteException
+	public int queryFlightPrice(int xid, int flightNum) throws RemoteException, TransactionAbortedException, InvalidTransactionException
 	{
+		TransactionManager.validateXID(xid);
+		TransactionManager.readLockFlight(xid, flightNum);
 		return queryPrice(xid, Flight.getKey(flightNum));
 	}
 
