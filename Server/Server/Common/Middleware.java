@@ -214,7 +214,7 @@ public class Middleware implements IResourceManager
 	}
 
 	// Returns the number of empty seats in this flight
-	public int queryFlight(int xid, int flightNum) throws RemoteException
+	public int queryFlight(int xid, int flightNum) throws RemoteException, TransactionAbortedException, InvalidTransactionException
 	{
 		Trace.info("MW::queryFlight(" + xid + ", " + flightNum + ") called");
 		IResourceManager m_resourceManager = connectServer(flightsHost, portNum, flightsServerName);
@@ -259,7 +259,7 @@ public class Middleware implements IResourceManager
 	}
 
 	// Returns price of a seat in this flight
-	public int queryFlightPrice(int xid, int flightNum) throws RemoteException
+	public int queryFlightPrice(int xid, int flightNum) throws RemoteException, TransactionAbortedException, InvalidTransactionException
 	{
 		Trace.info("MW::queryFlightPrice(" + xid + ", " + flightNum + ") called");
 		IResourceManager m_resourceManager = connectServer(flightsHost, portNum, flightsServerName);
