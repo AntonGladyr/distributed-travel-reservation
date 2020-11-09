@@ -21,7 +21,7 @@ public class TCPResourceManager extends ResourceManager
 {
 	private static String s_serverName = "Server";
 	
-	private static int port = 33303;
+	private static int port = 33304;
 
 	public static void main(String args[])
 	{

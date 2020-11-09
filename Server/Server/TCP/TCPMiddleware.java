@@ -12,7 +12,7 @@ public class TCPMiddleware extends Middleware {
 
 	private static String s_serverName = "Middleware";
 	
-	private static int port = 33303;
+	private static int port = 33304;
 
 	public static void main(String args[]) {
 		
