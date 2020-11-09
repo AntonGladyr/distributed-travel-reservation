@@ -6,6 +6,7 @@
 //package Server.TCP;
 //
 //import Server.Common.*;
+//import Server.Interface.Port;
 //
 //import java.io.IOException;
 //import java.net.ServerSocket;
@@ -21,7 +22,7 @@
 //{
 //	private static String s_serverName = "Server";
 //	
-//	private static int port = 33304;
+//	private static int port = Port.getPort();
 //
 //	public static void main(String args[])
 //	{
