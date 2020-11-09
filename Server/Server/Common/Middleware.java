@@ -118,6 +118,7 @@ public class Middleware implements IResourceManager
 		// Validate xid
 		TransactionManager.validateXID(xid);
 		TransactionManager.writeLockFlight(xid, flightNum);
+		Trace.info("here");
 
 		IResourceManager m_resourceManager = connectServer(flightsHost, portNum, flightsServerName);
 		if (m_resourceManager != null) {	
