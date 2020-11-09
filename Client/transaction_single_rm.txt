@@ -1,0 +1,2 @@
+AddCustomerID,<xid>,500
+DeleteCustomer,<xid>,500
