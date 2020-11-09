@@ -1,5 +1,6 @@
 package Transactions;
 
+import java.rmi.RemoteException;
 import java.util.HashMap;
 
 import Server.Common.ResourceManager;
@@ -133,6 +134,15 @@ public class TransactionManager {
 		// TODO Auto-generated method stub
 	}
 
+	public static void commit(int xid) throws RemoteException {
+		//unlock relevent locks
+		lockManager.UnlockAll(xid);
+		
+		//remove from active transactions list
+		activeTransactions.remove(xid);
+	}
+	
+	
 	// Checks whether the specified transaction exists and is still active
 	// TODO ensure that this check fails if the transaction is finished
 	public static void validateXID(int xid) throws InvalidTransactionException {
