@@ -258,8 +258,8 @@ public class ResourceManager implements IResourceManager
 	// Returns price of a seat in this flight
 	public int queryFlightPrice(int xid, int flightNum) throws RemoteException, TransactionAbortedException, InvalidTransactionException
 	{
-		TransactionManager.validateXID(xid);
-		TransactionManager.readLockFlight(xid, flightNum);
+//		TransactionManager.validateXID(xid);
+//		TransactionManager.readLockFlight(xid, flightNum);
 		return queryPrice(xid, Flight.getKey(flightNum));
 	}
 

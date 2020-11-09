@@ -134,9 +134,15 @@ public class Middleware implements IResourceManager
 
 	// Create a new car location or add cars to an existing location
 	// NOTE: if price <= 0 and the location already exists, it maintains its current price
-	public boolean addCars(int xid, String location, int count, int price) throws RemoteException
+	public boolean addCars(int xid, String location, int count, int price) throws RemoteException, InvalidTransactionException, TransactionAbortedException
 	{
 		Trace.info("MW::addCars(" + xid + ", " + location + ", " + count + ", $" + price + ") called");
+		
+		// Validate xid
+		TransactionManager.validateXID(xid);
+		//acquire write lock
+		TransactionManager.writeLockCar(xid, location);
+		
 		IResourceManager m_resourceManager = connectServer(carsHost, portNum, carsServerName);
 		if (m_resourceManager != null) {	
 			return m_resourceManager.addCars(xid, location, count, price);
@@ -150,7 +156,7 @@ public class Middleware implements IResourceManager
 
 	// Create a new room location or add rooms to an existing location
 	// NOTE: if price <= 0 and the room location already exists, it maintains its current price
-	public boolean addRooms(int xid, String location, int count, int price) throws RemoteException
+	public boolean addRooms(int xid, String location, int count, int price) throws RemoteException, InvalidTransactionException, TransactionAbortedException
 	{
 		Trace.info("MW::addRooms(" + xid + ", " + location + ", " + count + ", $" + price + ") called");
 		IResourceManager m_resourceManager = connectServer(roomsHost, portNum, roomsServerName);
@@ -184,9 +190,15 @@ public class Middleware implements IResourceManager
 	}
 
 	// Delete cars at a location
-	public boolean deleteCars(int xid, String location) throws RemoteException
+	public boolean deleteCars(int xid, String location) throws RemoteException, InvalidTransactionException, TransactionAbortedException
 	{
 		Trace.info("MW::deleteCars(" + xid + ", " + location + ") called");
+		
+		// Validate xid
+				TransactionManager.validateXID(xid);
+				//acquire write lock
+				TransactionManager.writeLockCar(xid, location);
+		
 		IResourceManager m_resourceManager = connectServer(carsHost, portNum, carsServerName);
 		if (m_resourceManager != null) {
 			return m_resourceManager.deleteCars(xid, location);
@@ -199,7 +211,7 @@ public class Middleware implements IResourceManager
 	}
 
 	// Delete rooms at a location
-	public boolean deleteRooms(int xid, String location) throws RemoteException
+	public boolean deleteRooms(int xid, String location) throws RemoteException, InvalidTransactionException, TransactionAbortedException
 	{
 		Trace.info("MW::deleteRooms(" + xid + ", " + location + ") called");
 		IResourceManager m_resourceManager = connectServer(roomsHost, portNum, roomsServerName);
@@ -231,9 +243,15 @@ public class Middleware implements IResourceManager
 	}
 
 	// Returns the number of cars available at a location
-	public int queryCars(int xid, String location) throws RemoteException
+	public int queryCars(int xid, String location) throws RemoteException, InvalidTransactionException, TransactionAbortedException
 	{
 		Trace.info("MW::queryCars(" + xid + ", " + location + ") called");
+		
+		// Validate xid
+				TransactionManager.validateXID(xid);
+				//acquire read lock
+				TransactionManager.readLockCar(xid, location);
+		
 		IResourceManager m_resourceManager = connectServer(carsHost, portNum, carsServerName);
 		if (m_resourceManager != null) {	
 			return m_resourceManager.queryCars(xid, location);
@@ -246,7 +264,7 @@ public class Middleware implements IResourceManager
 	}
 
 	// Returns the amount of rooms available at a location
-	public int queryRooms(int xid, String location) throws RemoteException
+	public int queryRooms(int xid, String location) throws RemoteException, InvalidTransactionException, TransactionAbortedException
 	{
 		Trace.info("MW::queryRooms(" + xid + ", " + location + ") called");
 		IResourceManager m_resourceManager = connectServer(roomsHost, portNum, roomsServerName);
@@ -264,6 +282,8 @@ public class Middleware implements IResourceManager
 	public int queryFlightPrice(int xid, int flightNum) throws RemoteException, TransactionAbortedException, InvalidTransactionException
 	{
 		Trace.info("MW::queryFlightPrice(" + xid + ", " + flightNum + ") called");
+		TransactionManager.validateXID(xid);
+		TransactionManager.readLockFlight(xid, flightNum);
 		IResourceManager m_resourceManager = connectServer(flightsHost, portNum, flightsServerName);
 		if (m_resourceManager != null) {	
 			return m_resourceManager.queryFlightPrice(xid, flightNum);
@@ -276,9 +296,15 @@ public class Middleware implements IResourceManager
 	}
 
 	// Returns price of cars at this location
-	public int queryCarsPrice(int xid, String location) throws RemoteException
+	public int queryCarsPrice(int xid, String location) throws RemoteException, InvalidTransactionException, TransactionAbortedException
 	{
 		Trace.info("MW::queryCarsPrice(" + xid + ", " + location + ") called");
+		
+		// Validate xid
+				TransactionManager.validateXID(xid);
+				//acquire read lock
+				TransactionManager.readLockCar(xid, location);
+		
 		IResourceManager m_resourceManager = connectServer(carsHost, portNum, carsServerName);
 		if (m_resourceManager != null) {	
 			return m_resourceManager.queryCarsPrice(xid, location);
@@ -291,7 +317,7 @@ public class Middleware implements IResourceManager
 	}
 
 	// Returns room price at this location
-	public int queryRoomsPrice(int xid, String location) throws RemoteException
+	public int queryRoomsPrice(int xid, String location) throws RemoteException, InvalidTransactionException, TransactionAbortedException
 	{
 		Trace.info("MW::queryRoomsPrice(" + xid + ", " + location + ") called");
 		IResourceManager m_resourceManager = connectServer(roomsHost, portNum, roomsServerName);

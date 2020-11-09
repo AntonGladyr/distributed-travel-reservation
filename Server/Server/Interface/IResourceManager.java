@@ -45,9 +45,11 @@ public interface IResourceManager extends Remote
      * instead of a flight number.
      *
      * @return Success
+     * @throws TransactionAbortedException 
+     * @throws InvalidTransactionException 
      */
     public boolean addCars(int id, String location, int numCars, int price) 
-	throws RemoteException; 
+	throws RemoteException, InvalidTransactionException, TransactionAbortedException; 
    
     /**
      * Add room at a location.
@@ -56,9 +58,11 @@ public interface IResourceManager extends Remote
      * instead of a flight number.
      *
      * @return Success
+     * @throws TransactionAbortedException 
+     * @throws InvalidTransactionException 
      */
     public boolean addRooms(int id, String location, int numRooms, int price) 
-	throws RemoteException; 			    
+	throws RemoteException, InvalidTransactionException, TransactionAbortedException; 			    
 			    
     /**
      * Add customer.
@@ -99,9 +103,11 @@ public interface IResourceManager extends Remote
      * It may not succeed if there are reservations for this location
      *
      * @return Success
+     * @throws TransactionAbortedException 
+     * @throws InvalidTransactionException 
      */		    
     public boolean deleteCars(int id, String location) 
-	throws RemoteException; 
+	throws RemoteException, InvalidTransactionException, TransactionAbortedException; 
 
     /**
      * Delete all rooms at a location.
@@ -109,9 +115,11 @@ public interface IResourceManager extends Remote
      * It may not succeed if there are reservations for this location.
      *
      * @return Success
+     * @throws TransactionAbortedException 
+     * @throws InvalidTransactionException 
      */
     public boolean deleteRooms(int id, String location) 
-	throws RemoteException; 
+	throws RemoteException, InvalidTransactionException, TransactionAbortedException; 
     
     /**
      * Delete a customer and associated reservations.
@@ -137,17 +145,21 @@ public interface IResourceManager extends Remote
      * Query the status of a car location.
      *
      * @return Number of available cars at this location
+     * @throws TransactionAbortedException 
+     * @throws InvalidTransactionException 
      */
     public int queryCars(int id, String location) 
-	throws RemoteException; 
+	throws RemoteException, InvalidTransactionException, TransactionAbortedException; 
 
     /**
      * Query the status of a room location.
      *
      * @return Number of available rooms at this location
+     * @throws TransactionAbortedException 
+     * @throws InvalidTransactionException 
      */
     public int queryRooms(int id, String location) 
-	throws RemoteException; 
+	throws RemoteException, InvalidTransactionException, TransactionAbortedException; 
 
     /**
      * Query the customer reservations.
@@ -173,17 +185,21 @@ public interface IResourceManager extends Remote
      * Query the status of a car location.
      *
      * @return Price of car
+     * @throws TransactionAbortedException 
+     * @throws InvalidTransactionException 
      */
     public int queryCarsPrice(int id, String location) 
-	throws RemoteException; 
+	throws RemoteException, InvalidTransactionException, TransactionAbortedException; 
 
     /**
      * Query the status of a room location.
      *
      * @return Price of a room
+     * @throws TransactionAbortedException 
+     * @throws InvalidTransactionException 
      */
     public int queryRoomsPrice(int id, String location) 
-	throws RemoteException; 
+	throws RemoteException, InvalidTransactionException, TransactionAbortedException; 
 
     /**
      * Reserve a seat on this flight.
