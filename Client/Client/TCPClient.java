@@ -12,7 +12,7 @@ import java.net.Socket;
 public class TCPClient extends Client
 {
 	private static String s_serverHost = "localhost";
-	private static int s_serverPort = 33303;
+	private static int s_serverPort = 33304;
 	private static String s_serverName = "Server";
 
 	public static void main(String args[])

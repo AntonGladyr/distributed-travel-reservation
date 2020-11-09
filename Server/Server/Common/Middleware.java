@@ -39,7 +39,7 @@ public class Middleware implements IResourceManager
 	private final String flightsServerName = "Flights";
 	private final String carsServerName = "Cars";
 	private final String roomsServerName = "Rooms";
-	protected final int portNum = 33303;
+	protected final int portNum = 33304;
 	
 	protected String m_name = "";
 	protected RMHashMap m_data = new RMHashMap();
