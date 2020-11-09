@@ -45,9 +45,17 @@ public class TransactionManager {
 			Trace.info("TransactionManager::addRMtoT() trying to add rm to non-active transaction");
 		}
 	}
+	
+	public void resetTimeToLive(int xid) {
+		// check if transaction is active
+				if (activeTransactions.containsKey(xid)) {
+					activeTransactions.get(xid).resetTimeToLive(); 
+				} else {
+					Trace.info("TransactionManager::aresetTimeToLive() trying to reset time to live of non-active transaction");
+				}
+	}
 
-	// ----------------------------------------------read/write lock
-	// methods------------------------------------------------------------------
+	// ----------------------------------------------read/write lock methods------------------------------------------------------------------
 
 	// Requests a READ lock on a customer
 	public static void readLockCustomer(int xid, int customerID) throws TransactionAbortedException {
@@ -104,6 +112,29 @@ public class TransactionManager {
 			handleDeadlock(xid);
 		}
 	}
+	
+	// Requests a READ lock on a room
+	public static void readLockRoom(int xid, String location) throws TransactionAbortedException {
+		try {
+			String lockData = location + " room";
+			customerLockManager.Lock(xid, lockData, TransactionLockObject.LockType.LOCK_READ);
+		} catch (DeadlockException e) {
+			handleDeadlock(xid);
+		}
+	}
+
+	// Requests a WRITE lock on a car
+	public static void writeLockRoom(int xid, String location) throws TransactionAbortedException {
+		try {
+			String lockData = location + " room";
+			customerLockManager.Lock(xid, lockData, TransactionLockObject.LockType.LOCK_WRITE);
+		} catch (DeadlockException e) {
+			handleDeadlock(xid);
+		}
+	}
+	
+	
+	
 	
 	
 	
