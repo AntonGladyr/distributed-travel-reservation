@@ -12,7 +12,10 @@ public class Port {
 	
 	public static int getPort() {
 		
-		if (port == -1) readPortFromFile();
+		if (port == -1) {
+			readPortFromFile();
+			System.out.println("Using port " + port);
+		}
 		return port;
 	}
 
