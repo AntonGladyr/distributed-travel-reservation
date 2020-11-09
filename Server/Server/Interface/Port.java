@@ -8,7 +8,7 @@ import java.util.Scanner;
 public class Port {
 	
 	private static int port = -1; // Initialized to -1, but gets read from a file when first queried
-	private static String filename = "PORT"; // Name (path) of the file where the port number is stored
+	private static String filename = "../PORT"; // Name (path) of the file where the port number is stored
 	
 	public static int getPort() {
 		
