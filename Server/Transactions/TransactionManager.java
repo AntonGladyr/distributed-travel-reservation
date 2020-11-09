@@ -61,6 +61,24 @@ public class TransactionManager {
 			handleDeadlock(xid);
 		}
 	}
+	
+	//Requests a READ lock on a flight
+	public static void readLockFlight(int xid, int flightNumber) throws TransactionAbortedException {
+		try {
+			customerLockManager.Lock(xid, Integer.toString(flightNumber), TransactionLockObject.LockType.LOCK_READ);
+		} catch (DeadlockException e) {
+			handleDeadlock(xid);
+		}
+	}
+	// Requests a WRITE lock on a flight
+		public static void writeLockFlight(int xid, int flightNumber) throws TransactionAbortedException {
+			try {
+				customerLockManager.Lock(xid, Integer.toString(flightNumber), TransactionLockObject.LockType.LOCK_WRITE);
+			} catch (DeadlockException e) {
+				handleDeadlock(xid);
+			}
+		}
+	
 
 	// Aborts a transaction
 	public static void abort(int xid) {

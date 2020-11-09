@@ -112,9 +112,13 @@ public class Middleware implements IResourceManager
 
 	// Create a new flight, or add seats to existing flight
 	// NOTE: if flightPrice <= 0 and the flight already exists, it maintains its current price
-	public boolean addFlight(int xid, int flightNum, int flightSeats, int flightPrice) throws RemoteException
+	public boolean addFlight(int xid, int flightNum, int flightSeats, int flightPrice) throws RemoteException, InvalidTransactionException, TransactionAbortedException
 	{	
 		Trace.info("MW::addFlight(" + xid + ", " + flightNum + ", " + flightSeats + ", $" + flightPrice + ") called");
+		// Validate xid
+		TransactionManager.validateXID(xid);
+		TransactionManager.writeLockFlight(xid, flightNum);
+
 		IResourceManager m_resourceManager = connectServer(flightsHost, portNum, flightsServerName);
 		if (m_resourceManager != null) {	
 			return m_resourceManager.addFlight(xid, flightNum, flightSeats, flightPrice);
@@ -124,6 +128,7 @@ public class Middleware implements IResourceManager
 				   "  could not connect to the resource manager server.");
 			return false;
 		}
+		
 	}
 
 	// Create a new car location or add cars to an existing location

@@ -9,6 +9,7 @@ import Server.Interface.*;
 
 import java.util.*;
 import java.rmi.RemoteException;
+import Transactions.TransactionManager;
 
 public class ResourceManager implements IResourceManager
 {

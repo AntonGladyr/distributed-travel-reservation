@@ -32,9 +32,11 @@ public interface IResourceManager extends Remote
      * available seats.
      *
      * @return Success
+     * @throws TransactionAbortedException 
+     * @throws InvalidTransactionException 
      */
     public boolean addFlight(int id, int flightNum, int flightSeats, int flightPrice) 
-	throws RemoteException; 
+	throws RemoteException, InvalidTransactionException, TransactionAbortedException; 
     
     /**
      * Add car at a location.
