@@ -847,9 +847,21 @@ public class Middleware implements IResourceManager {
 	}
 
 	@Override
-	public boolean commit(int xid) throws RemoteException {
+	public boolean commit(int xid) throws RemoteException, InvalidTransactionException {
 		// TODO Auto-generated method stub
 		Trace.info("MW::commit(" + xid + ") called");
+		
+		//verify xid
+		TransactionManager.validateXID(xid);
+		
+		//send commit message to all relevant rm's
+		
+		
+		//send commit message to transaction manager
+		TransactionManager.commit(xid);
+		
+		
+		
 		return false;
 	}
 
