@@ -116,9 +116,9 @@ public class Middleware implements IResourceManager
 	{	
 		Trace.info("MW::addFlight(" + xid + ", " + flightNum + ", " + flightSeats + ", $" + flightPrice + ") called");
 		// Validate xid
-		TransactionManager.validateXID(xid);
-		TransactionManager.writeLockFlight(xid, flightNum);
-		Trace.info("here");
+//		TransactionManager.validateXID(xid);
+//		TransactionManager.writeLockFlight(xid, flightNum);
+//		Trace.info("here");
 
 		IResourceManager m_resourceManager = connectServer(flightsHost, portNum, flightsServerName);
 		if (m_resourceManager != null) {	
