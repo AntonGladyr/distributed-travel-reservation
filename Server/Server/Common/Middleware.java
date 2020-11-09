@@ -116,8 +116,8 @@ public class Middleware implements IResourceManager
 	{	
 		Trace.info("MW::addFlight(" + xid + ", " + flightNum + ", " + flightSeats + ", $" + flightPrice + ") called");
 		// Validate xid
-//		TransactionManager.validateXID(xid);
-//		TransactionManager.writeLockFlight(xid, flightNum);
+		TransactionManager.validateXID(xid);
+		TransactionManager.writeLockFlight(xid, flightNum);
 //		Trace.info("here");
 
 		IResourceManager m_resourceManager = connectServer(flightsHost, portNum, flightsServerName);
@@ -217,6 +217,8 @@ public class Middleware implements IResourceManager
 	public int queryFlight(int xid, int flightNum) throws RemoteException, TransactionAbortedException, InvalidTransactionException
 	{
 		Trace.info("MW::queryFlight(" + xid + ", " + flightNum + ") called");
+		TransactionManager.validateXID(xid);
+		TransactionManager.writeLockFlight(xid, flightNum);
 		IResourceManager m_resourceManager = connectServer(flightsHost, portNum, flightsServerName);
 		if (m_resourceManager != null) {
 			return m_resourceManager.queryFlight(xid, flightNum);

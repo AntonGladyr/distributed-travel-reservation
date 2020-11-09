@@ -138,8 +138,8 @@ public class ResourceManager implements IResourceManager
 	// NOTE: if flightPrice <= 0 and the flight already exists, it maintains its current price
 	public boolean addFlight(int xid, int flightNum, int flightSeats, int flightPrice) throws RemoteException, TransactionAbortedException, InvalidTransactionException
 	{
-		TransactionManager.validateXID(xid);
-		TransactionManager.writeLockFlight(xid, flightNum);
+//		TransactionManager.validateXID(xid);
+//		TransactionManager.writeLockFlight(xid, flightNum);
 		Trace.info("RM::addFlight(" + xid + ", " + flightNum + ", " + flightSeats + ", $" + flightPrice + ") called");
 		Flight curObj = (Flight)readData(xid, Flight.getKey(flightNum));
 		if (curObj == null)
@@ -238,8 +238,8 @@ public class ResourceManager implements IResourceManager
 	// Returns the number of empty seats in this flight
 	public int queryFlight(int xid, int flightNum) throws RemoteException, TransactionAbortedException, InvalidTransactionException
 	{
-		TransactionManager.validateXID(xid);
-		TransactionManager.readLockFlight(xid, flightNum);
+//		TransactionManager.validateXID(xid);
+//		TransactionManager.readLockFlight(xid, flightNum);
 		return queryNum(xid, Flight.getKey(flightNum));
 	}
 
