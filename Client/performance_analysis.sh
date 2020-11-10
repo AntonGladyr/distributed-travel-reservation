@@ -17,14 +17,38 @@ TOTAL_TIME=0
 TR_ID=1
 
 function send_workload() {
+	# clean the output
+	> /tmp/"client_$ID"_output
+	# create new transaction
+	echo "start" >> /tmp/"client_$ID"
+	while true; do
+		# read the transaction id
+		TR_ID_LINE=`cat /tmp/"client_$ID"_output | grep -a 'Transaction ID (xid)' | wc -l`
+		if [ "$TR_ID_LINE" -eq "1" ]
+		then
+			TR_ID=`cat /tmp/"client_$ID"_output | grep -a 'Transaction ID (xid)' | cut -d":" -f2`
+			break
+		fi
+	done
+	
+	# make a copy of the transcation.txt file
+	cp "$TRANSACTION_FILE" /tmp/"$TMP_TRANSACTION_FILE"
+	# find and replace the input values	
+	sed -i -e "s/<xid>/$TR_ID/g" /tmp/"$TMP_TRANSACTION_FILE"
+	sed -i -e "s/<FlightNumber>/$ID/g" /tmp/"$TMP_TRANSACTION_FILE"
+	#sed -i -e 's/<customerID>//g' /tmp/"$TMP_TRANSACTION_FILE"
+	# at the client, measure the response time of the transaction
+	
 	# interact with the java input
 	cat /tmp/"$TMP_TRANSACTION_FILE" >> /tmp/"client_$ID"
+
+	echo "commit,$TR_ID" >> /tmp/"client_$ID"
 	
 	while true; do
 		#TODO check for commit or abort
-		#abort=`cat /tmp/client_1_output | grep "Abort" | wc -l`
-		#commit=`cat /tmp/client_1_output | grep "Commit" | wc -l`	
-		NUM=`cat /tmp/"client_$ID"_output | grep "Deleted" | wc -l`
+		#abort=`cat /tmp/client_1_output | grep -a "Abort" | wc -l`
+		#commit=`cat /tmp/client_1_output | grep -a "Commit" | wc -l`	
+		NUM=`cat /tmp/"client_$ID"_output | grep -a 'committed' | wc -l`
 		if [ "$NUM" -eq "1" ]
 		then
 			break
@@ -60,13 +84,6 @@ do
 	NUM_OF_TRANSACTIONS=$EXP_NUM
 	for TR in $(seq 1 $NUM_OF_TRANSACTIONS) # send transactions
 	do
-		# make a copy of the transcation.txt file
-		cp "$TRANSACTION_FILE" /tmp/"$TMP_TRANSACTION_FILE"
-		# find and replace the input values
-		sed -i -e "s/<xid>/$TR_ID/g" /tmp/"$TMP_TRANSACTION_FILE"
-		sed -i -e "s/<FlightNumber>/$ID/g" /tmp/"$TMP_TRANSACTION_FILE"
-		#sed -i -e 's/<customerID>//g' /tmp/"$TMP_TRANSACTION_FILE"
-		# at the client, measure the response time of the transaction		
 		RESPONSE_TIME=`{ time send_workload >> /tmp/"client_$ID"; } 2>&1 | grep real | cut -f2 | sed -e 's/.m\(.*\)s/\1/'`
 		SEC=`echo $RESPONSE_TIME | cut -d"." -f1`
 		MILLISECONDS=`echo $RESPONSE_TIME | cut -d"." -f2`
