@@ -169,24 +169,26 @@ public class TransactionManager {
 	
 	// Aborts a transaction
 	public static void abort(int xid) throws RemoteException, InvalidTransactionException {
-		// Unlock relevant locks
-		lockManager.UnlockAll(xid);
 				
 		// Forward abort message to all relevant resourceManagers
 		Transaction t = activeTransactions.get(xid);
 		if (t != null) t.abort();
+		
+		// Unlock relevant locks
+		lockManager.UnlockAll(xid);
 		
 		// Remove from active transactions list
 		activeTransactions.remove(xid);
 	}
 
 	public static void commit(int xid) throws RemoteException, InvalidTransactionException {
-		// Unlock relevant locks
-		lockManager.UnlockAll(xid);
 		
 		// Forward commit message to all relevant resourceManagers
 		Transaction t = activeTransactions.get(xid);
 		if (t != null) t.commit();
+		
+		// Unlock relevant locks
+		lockManager.UnlockAll(xid);
 		
 		// Remove from active transactions list
 		activeTransactions.remove(xid);
