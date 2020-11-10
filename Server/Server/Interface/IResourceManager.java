@@ -205,30 +205,37 @@ public interface IResourceManager extends Remote
      * Reserve a seat on this flight.
      *
      * @return Success
+     * @throws TransactionAbortedException 
+     * @throws InvalidTransactionException 
      */
     public int reserveFlight(int id, int customerID, int flightNumber) 
-	throws RemoteException; 
+	throws RemoteException, TransactionAbortedException, InvalidTransactionException; 
 
     /**
      * Reserve a car at this location.
      *
      * @return Success
+     * @throws InvalidTransactionException 
+     * @throws TransactionAbortedException 
      */
     public int reserveCar(int id, int customerID, String location)
-	throws RemoteException; 
+	throws RemoteException, InvalidTransactionException, TransactionAbortedException; 
 
     /**
      * Reserve a room at this location.
      *
      * @return Success
+     * @throws InvalidTransactionException 
+     * @throws TransactionAbortedException 
      */
     public int reserveRoom(int id, int customerID, String location)
-	throws RemoteException; 
+	throws RemoteException, InvalidTransactionException, TransactionAbortedException; 
 
     /**
      * Reserve a bundle for the trip.
      *
      * @return Success
+     * @throws InvalidTransactionException 
      */
     public boolean bundle(int id, int customerID, Vector<String> flightNumbers, String location, boolean car, boolean room)
 	throws RemoteException; 

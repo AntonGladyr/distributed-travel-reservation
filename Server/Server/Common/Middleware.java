@@ -458,8 +458,13 @@ public class Middleware implements IResourceManager {
 	}
 
 	// Adds flight reservation to this customer
-	public int reserveFlight(int xid, int customerID, int flightNum) throws RemoteException {
+	public int reserveFlight(int xid, int customerID, int flightNum)
+			throws RemoteException, TransactionAbortedException, InvalidTransactionException {
 		Trace.info("MW::reserveFlight(" + xid + ", " + customerID + ", " + flightNum + ") called");
+
+		// Validate xid
+		TransactionManager.validateXID(xid);
+
 		Customer customer = getCustomer(xid, customerID);
 		// if customer does not exist, return -1
 		if (customer == null)
@@ -470,9 +475,14 @@ public class Middleware implements IResourceManager {
 		if (m_resourceManager == null)
 			return -1;
 
+		// acquire write lock on flight
+		TransactionManager.writeLockFlight(xid, flightNum);
+
 		// if a flight is successfully reserved return 0, otherwise -1
 		int flightPrice = m_resourceManager.reserveFlight(xid, customerID, flightNum);
 		if (flightPrice != -1) {
+			// acquire write lock on customer
+			TransactionManager.writeLockCustomer(xid, customerID);
 			customer.reserve(Flight.getKey(flightNum), String.valueOf(flightNum), flightPrice);
 			writeData(xid, customer.getKey(), customer);
 			return 0;
@@ -482,8 +492,12 @@ public class Middleware implements IResourceManager {
 	}
 
 	// Adds car reservation to this customer
-	public int reserveCar(int xid, int customerID, String location) throws RemoteException {
+	public int reserveCar(int xid, int customerID, String location) throws RemoteException, InvalidTransactionException, TransactionAbortedException {
 		Trace.info("MW::reserveCar(" + xid + ", " + customerID + ", " + location + ") called");
+
+		// Validate xid
+		TransactionManager.validateXID(xid);
+
 		Customer customer = getCustomer(xid, customerID);
 		// if customer does not exist, return false
 		if (customer == null)
@@ -493,11 +507,15 @@ public class Middleware implements IResourceManager {
 		IResourceManager m_resourceManager = connectServer(carsHost, portNum, carsServerName);
 		if (m_resourceManager == null)
 			return -1;
-
+		//acquire write lock on car
+		TransactionManager.writeLockCar(xid, location);
+		
 		// if a car is successfully reserved return 0, otherwise -1
 		int carPrice = m_resourceManager.reserveCar(xid, customerID, location);
 
 		if (carPrice != -1) {
+			//acquire write lock on customer
+			TransactionManager.writeLockCustomer(xid, customerID);
 			customer.reserve(Car.getKey(location), location, carPrice);
 			writeData(xid, customer.getKey(), customer);
 			return carPrice;
@@ -507,8 +525,13 @@ public class Middleware implements IResourceManager {
 	}
 
 	// Adds room reservation to this customer
-	public int reserveRoom(int xid, int customerID, String location) throws RemoteException {
+	public int reserveRoom(int xid, int customerID, String location) throws RemoteException, InvalidTransactionException, TransactionAbortedException {
 		Trace.info("MW::reserveRoom(" + xid + ", " + customerID + ", " + location + ") called");
+		
+		// Validate xid
+		TransactionManager.validateXID(xid);
+		
+		
 		Customer customer = getCustomer(xid, customerID);
 		// if customer does not exist, return false
 		if (customer == null)
@@ -519,9 +542,14 @@ public class Middleware implements IResourceManager {
 		if (m_resourceManager == null)
 			return -1;
 
+		//get write lock on room
+		TransactionManager.writeLockRoom(xid, location);
+		
 		// if a room is successfully reserved return 0, otherwise -1
 		int roomPrice = m_resourceManager.reserveRoom(xid, customerID, location);
 		if (roomPrice != -1) {
+			//get write lock on customer
+			TransactionManager.writeLockCustomer(xid, customerID);
 			customer.reserve(Room.getKey(location), location, roomPrice);
 			writeData(xid, customer.getKey(), customer);
 			return roomPrice;
@@ -849,21 +877,18 @@ public class Middleware implements IResourceManager {
 	@Override
 	public boolean commit(int xid) throws RemoteException, InvalidTransactionException {
 		// TODO Auto-generated method stub
-	//	Trace.info("MW::commit(" + xid + ") called");
-		
-		//verify xid
+		// Trace.info("MW::commit(" + xid + ") called");
+
+		// verify xid
 		TransactionManager.validateXID(xid);
-		
+
 		Trace.info("MW::commit(" + xid + ") called");
-		
-		//send commit message to all relevant rm's
-		
-		
-		//send commit message to transaction manager
+
+		// send commit message to all relevant rm's
+
+		// send commit message to transaction manager
 		TransactionManager.commit(xid);
-		
-		
-		
+
 		return true;
 	}
 
