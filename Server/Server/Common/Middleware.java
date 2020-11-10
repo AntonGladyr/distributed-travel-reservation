@@ -904,6 +904,6 @@ public class Middleware implements IResourceManager, DataStore {
 		// Send abort message to transaction manager
 		TransactionManager.abort(xid);
 		
-		return false;
+		return true;
 	}
 }

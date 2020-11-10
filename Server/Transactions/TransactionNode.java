@@ -73,7 +73,7 @@ public class TransactionNode {
 			}
 		}
 
-		Trace.info("RM::" + count + "before-images for (" + xid + ") were restored");
+		Trace.info("RM::" + count + " before-images for (" + xid + ") were restored");
 		
 		// Terminate the transaction
 		finalize(xid);
