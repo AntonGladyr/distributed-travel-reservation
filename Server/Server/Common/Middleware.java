@@ -26,7 +26,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.CancellationException;
 
-public class Middleware implements IResourceManager {
+public class Middleware implements IResourceManager, DataStore {
 	
 	// group number as unique identifier
 	private static final String s_rmiPrefix = "group_03_";
@@ -61,7 +61,10 @@ public class Middleware implements IResourceManager {
 		roomsManager = connectServer(roomsHost, portNum, roomsServerName);
 		
 		// Register the resource managers with the transaction manager
-		TransactionManager.registerResourceManagers(this, flightsManager, carsManager, roomsManager);
+		TransactionManager.registerResourceManagers(flightsManager, carsManager, roomsManager);
+		
+		// Register self with the transaction node
+		TransactionNode.dataStore = this;
 	}
 
 	// Reads a data item
@@ -879,16 +882,12 @@ public class Middleware implements IResourceManager {
 
 	@Override
 	public boolean commit(int xid) throws RemoteException, InvalidTransactionException {
-		// TODO Auto-generated method stub
-		// Trace.info("MW::commit(" + xid + ") called");
+		
+		Trace.info("MW::commit(" + xid + ") called");
 
 		// verify xid
 		TransactionManager.validateXID(xid);
-
-		Trace.info("MW::commit(" + xid + ") called");
-
-		// send commit message to all relevant rm's
-
+		
 		// send commit message to transaction manager
 		TransactionManager.commit(xid);
 
@@ -896,9 +895,15 @@ public class Middleware implements IResourceManager {
 	}
 
 	@Override
-	public boolean abort(int xid) throws RemoteException {
-		// TODO Auto-generated method stub
+	public boolean abort(int xid) throws RemoteException, InvalidTransactionException {
 		Trace.info("MW::abort(" + xid + ") called");
+
+		// Validate xid
+		TransactionManager.validateXID(xid);
+		
+		// Send abort message to transaction manager
+		TransactionManager.abort(xid);
+		
 		return false;
 	}
 }

@@ -20,15 +20,13 @@ public class TransactionManager {
 	private static LockManager lockManager = new LockManager();
 
 	// References to the resource managers
-	private static IResourceManager customersManager;
 	private static IResourceManager flightsManager;
 	private static IResourceManager carsManager;
 	private static IResourceManager roomsManager;
 	
 	// Saves references to all the resource managers
-	public static void registerResourceManagers(IResourceManager customersManager, IResourceManager flightsManager, IResourceManager carsManager,
+	public static void registerResourceManagers(IResourceManager flightsManager, IResourceManager carsManager,
 			IResourceManager roomsManager) {
-		TransactionManager.customersManager = customersManager;
 		TransactionManager.flightsManager = flightsManager;
 		TransactionManager.carsManager = carsManager;
 		TransactionManager.roomsManager = roomsManager;
@@ -58,6 +56,15 @@ public class TransactionManager {
 			Trace.info("TransactionManager::addRMtoT() trying to add rm to non-active transaction");
 		}
 	}
+
+	private static void setAccessedCustomers(int xid, boolean value) {
+		// check if transaction is active
+		if (activeTransactions.containsKey(xid)) {
+			activeTransactions.get(xid).setAccessedCustomers(value);
+		} else {
+			Trace.info("TransactionManager::setEditedCustomers() called on non-active transaction");
+		}
+	}
 	
 	public static void resetTimeToLive(int xid) {
 		// check if transaction is active
@@ -71,27 +78,27 @@ public class TransactionManager {
 	// ----------------------------------------------read/write lock methods------------------------------------------------------------------
 
 	// Requests a READ lock on a customer
-	public static void readLockCustomer(int xid, int customerID) throws TransactionAbortedException {
+	public static void readLockCustomer(int xid, int customerID) throws TransactionAbortedException, RemoteException, InvalidTransactionException {
 		try {
 			lockManager.Lock(xid, "customer-" + customerID, TransactionLockObject.LockType.LOCK_READ);
-			addRMtoT(xid, customersManager);
+			setAccessedCustomers(xid, true);
 		} catch (DeadlockException e) {
 			handleDeadlock(xid);
 		}
 	}
 
 	// Requests a WRITE lock on a customer
-	public static void writeLockCustomer(int xid, int customerID) throws TransactionAbortedException {
+	public static void writeLockCustomer(int xid, int customerID) throws TransactionAbortedException, RemoteException, InvalidTransactionException {
 		try {
 			lockManager.Lock(xid, "customer-" + customerID, TransactionLockObject.LockType.LOCK_WRITE);
-			addRMtoT(xid, customersManager);
+			setAccessedCustomers(xid, true);
 		} catch (DeadlockException e) {
 			handleDeadlock(xid);
 		}
 	}
 
 	// Requests a READ lock on a flight
-	public static void readLockFlight(int xid, int flightNumber) throws TransactionAbortedException {
+	public static void readLockFlight(int xid, int flightNumber) throws TransactionAbortedException, RemoteException, InvalidTransactionException {
 		try {
 			lockManager.Lock(xid, "flight-" + flightNumber, TransactionLockObject.LockType.LOCK_READ);
 			addRMtoT(xid, flightsManager);
@@ -101,7 +108,7 @@ public class TransactionManager {
 	}
 
 	// Requests a WRITE lock on a flight
-	public static void writeLockFlight(int xid, int flightNumber) throws TransactionAbortedException {
+	public static void writeLockFlight(int xid, int flightNumber) throws TransactionAbortedException, RemoteException, InvalidTransactionException {
 		try {
 			lockManager.Lock(xid, "flight-" + flightNumber, TransactionLockObject.LockType.LOCK_WRITE);
 			addRMtoT(xid, flightsManager);
@@ -111,7 +118,7 @@ public class TransactionManager {
 	}
 
 	// Requests a READ lock on a car
-	public static void readLockCar(int xid, String location) throws TransactionAbortedException {
+	public static void readLockCar(int xid, String location) throws TransactionAbortedException, RemoteException, InvalidTransactionException {
 		try {
 			lockManager.Lock(xid, "car-" + location, TransactionLockObject.LockType.LOCK_READ);
 			addRMtoT(xid, carsManager);
@@ -121,7 +128,7 @@ public class TransactionManager {
 	}
 
 	// Requests a WRITE lock on a car
-	public static void writeLockCar(int xid, String location) throws TransactionAbortedException {
+	public static void writeLockCar(int xid, String location) throws TransactionAbortedException, RemoteException, InvalidTransactionException {
 		try {
 			lockManager.Lock(xid, "car-" + location, TransactionLockObject.LockType.LOCK_WRITE);
 			addRMtoT(xid, carsManager);
@@ -131,7 +138,7 @@ public class TransactionManager {
 	}
 	
 	// Requests a READ lock on a room
-	public static void readLockRoom(int xid, String location) throws TransactionAbortedException {
+	public static void readLockRoom(int xid, String location) throws TransactionAbortedException, RemoteException, InvalidTransactionException {
 		try {
 			lockManager.Lock(xid, "room-" + location, TransactionLockObject.LockType.LOCK_READ);
 			addRMtoT(xid, roomsManager);
@@ -141,7 +148,7 @@ public class TransactionManager {
 	}
 
 	// Requests a WRITE lock on a car
-	public static void writeLockRoom(int xid, String location) throws TransactionAbortedException {
+	public static void writeLockRoom(int xid, String location) throws TransactionAbortedException, RemoteException, InvalidTransactionException {
 		try {
 			lockManager.Lock(xid, "room-" + location, TransactionLockObject.LockType.LOCK_WRITE);
 			addRMtoT(xid, roomsManager);
@@ -153,29 +160,35 @@ public class TransactionManager {
 	// ----------------------------------------------end of read/write lock methods------------------------------------------------------------------
 	
 	// Aborts a transaction
-	public static void abort(int xid) {
-		// TODO Auto-generated method stub
+	public static void abort(int xid) throws RemoteException, InvalidTransactionException {
+		// Forward abort message to all relevant resourceManagers
+		Transaction t = activeTransactions.get(xid);
+		if (t != null) t.abort();
+		
+		// Remove from active transactions list
+		activeTransactions.remove(xid);
 	}
 
-	public static void commit(int xid) throws RemoteException {
+	public static void commit(int xid) throws RemoteException, InvalidTransactionException {
 		//unlock relevent locks
 		lockManager.UnlockAll(xid);
+		
+		// Forward commit message to all relevant resourceManagers
+		Transaction t = activeTransactions.get(xid);
+		if (t != null) t.commit();
 		
 		//remove from active transactions list
 		activeTransactions.remove(xid);
 	}
 	
-	
 	// Checks whether the specified transaction exists and is still active
-	// TODO ensure that this check fails if the transaction is finished
 	public static void validateXID(int xid) throws InvalidTransactionException {
 		if (!activeTransactions.containsKey(xid))
 			throw new InvalidTransactionException();
 	}
 
 	// Take steps to handle a deadlock when it occurs
-	// TODO use timeouts instead of aborting immediately
-	private static void handleDeadlock(int xid) throws TransactionAbortedException {
+	private static void handleDeadlock(int xid) throws TransactionAbortedException, RemoteException, InvalidTransactionException {
 		TransactionManager.abort(xid);
 		throw new TransactionAbortedException();
 	}

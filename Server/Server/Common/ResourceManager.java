@@ -11,7 +11,7 @@ import java.util.*;
 import java.rmi.RemoteException;
 import Transactions.TransactionNode;
 
-public class ResourceManager implements IResourceManager
+public class ResourceManager implements IResourceManager, DataStore
 {
 	protected String m_name = "";
 	protected RMHashMap m_data = new RMHashMap();
@@ -21,6 +21,9 @@ public class ResourceManager implements IResourceManager
 	public ResourceManager(String p_name)
 	{
 		m_name = p_name;
+		
+		// Register self with the transaction node
+		TransactionNode.dataStore = this;
 	}
 
 	// Reads a data item
@@ -36,7 +39,7 @@ public class ResourceManager implements IResourceManager
 	}
 
 	// Writes a data item
-	protected void writeData(int xid, String key, RMItem value)
+	public void writeData(int xid, String key, RMItem value)
 	{
 		synchronized(m_data) {
 			m_data.put(key, value);
@@ -444,19 +447,18 @@ public class ResourceManager implements IResourceManager
 
 	@Override
 	public int start() throws RemoteException {
-		// TODO Auto-generated method stub
-		return 0;
+        throw new RemoteException(notImplementedHere);
 	}
 
 	@Override
 	public boolean commit(int xid) throws RemoteException {
-		// TODO Auto-generated method stub
-		return false;
+		TransactionNode.commit(xid);
+		return true;
 	}
 
 	@Override
 	public boolean abort(int xid) throws RemoteException {
-		// TODO Auto-generated method stub
-		return false;
+		TransactionNode.abort(xid);
+		return true;
 	}
 }

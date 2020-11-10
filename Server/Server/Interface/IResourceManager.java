@@ -285,9 +285,10 @@ public interface IResourceManager extends Remote
      * Abort a transaction.
      *
      * @return Success
+     * @throws InvalidTransactionException 
      */
     public boolean abort(int xid)
-    throws RemoteException;
+    throws RemoteException, InvalidTransactionException;
 
     /**
      * Convenience for probing the resource manager.
