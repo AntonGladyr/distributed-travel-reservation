@@ -9,7 +9,8 @@ import Server.Interface.InvalidTransactionException;
 public class Transaction {
 
 	int xid; // transaction id
-	// int timeToLive; TODO implement timeToLive mechanism
+	long timeToLive = 10000; 
+	long timeLastActive; 
 
 	private boolean accessedCustomers = false;
 	private List<IResourceManager> rmList = new ArrayList<IResourceManager>(); // keeps track of Resource Managers related
@@ -17,10 +18,14 @@ public class Transaction {
 
 	public Transaction(int xid) {
 		this.xid = xid;
+		this.timeLastActive = System.currentTimeMillis(); 
 	}
 	
 	public void setAccessedCustomers(boolean value) {
 		this.accessedCustomers = value;
+	}
+	public int getXID() {
+		return this.xid;
 	}
 
 	public void addRM(IResourceManager resourceManager) {
@@ -33,12 +38,11 @@ public class Transaction {
 	}
 
 	public void resetTimeToLive() {
-		// TODO
+		timeLastActive = System.currentTimeMillis();
 	}
 
-	public int getRemainingTimeToLive() {
-		// TODO
-		return 0;
+	public long getRemainingTimeToLive() {
+		return timeToLive - (System.currentTimeMillis() - timeLastActive);
 	}
 
 	// Forwards commit to all relevant nodes

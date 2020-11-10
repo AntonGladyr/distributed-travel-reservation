@@ -27,21 +27,21 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.CancellationException;
 
 public class Middleware implements IResourceManager, DataStore {
-	
+
 	// group number as unique identifier
 	private static final String s_rmiPrefix = "group_03_";
 	private static final int MAX_THREADS = 3;
 	private static final int WAIT_RESPONSE = 3;
-	
+
 	private final String flightsServerName = "Flights";
 	private final String carsServerName = "Cars";
 	private final String roomsServerName = "Rooms";
-	
+
 	// Reference to each remote RMI resource manager
 	private IResourceManager flightsManager;
 	private IResourceManager carsManager;
 	private IResourceManager roomsManager;
-	
+
 	protected final int portNum = Port.getPort();
 
 	protected String m_name = "";
@@ -54,15 +54,15 @@ public class Middleware implements IResourceManager, DataStore {
 		if (System.getSecurityManager() == null) {
 			System.setSecurityManager(new SecurityManager());
 		}
-		
+
 		// Initialize references to resource managers
 		flightsManager = connectServer(flightsHost, portNum, flightsServerName);
 		carsManager = connectServer(carsHost, portNum, carsServerName);
 		roomsManager = connectServer(roomsHost, portNum, roomsServerName);
-		
+
 		// Register the resource managers with the transaction manager
 		TransactionManager.registerResourceManagers(flightsManager, carsManager, roomsManager);
-		
+
 		// Register self with the transaction node
 		TransactionNode.dataStore = this;
 	}
@@ -98,6 +98,9 @@ public class Middleware implements IResourceManager, DataStore {
 
 		// Read customer object if it exists (and read lock it)
 		Customer customer = (Customer) readData(xid, Customer.getKey(customerID));
+
+		// reset time last active of transaction
+		TransactionManager.resetTimeToLive(xid);
 
 		if (customer == null) {
 			Trace.warn("MW::getCustomer(" + xid + ", " + customerID + ")  failed--customer doesn't exist");
@@ -355,6 +358,8 @@ public class Middleware implements IResourceManager, DataStore {
 			return "";
 		} else {
 			Trace.info("MW::queryCustomerInfo(" + xid + ", " + customerID + ")");
+			// reset time last active of transaction
+			TransactionManager.resetTimeToLive(xid);
 			System.out.println(customer.getBill());
 			return customer.getBill();
 		}
@@ -373,12 +378,14 @@ public class Middleware implements IResourceManager, DataStore {
 
 		// WRITE lock
 		TransactionManager.writeLockCustomer(xid, cid);
-		
+
 		TransactionNode.beforeWriting(xid, Customer.getKey(cid), null);
 
 		Customer customer = new Customer(cid);
 
 		writeData(xid, customer.getKey(), customer);
+		// Reset time last active of transaction
+		TransactionManager.resetTimeToLive(xid);
 
 		Trace.info("MW::newCustomer(" + cid + ") returns ID=" + cid);
 		return cid;
@@ -396,12 +403,14 @@ public class Middleware implements IResourceManager, DataStore {
 
 		String key = Customer.getKey(customerID);
 		Customer customer = (Customer) readData(xid, key);
-		
+
 		TransactionNode.beforeWriting(xid, key, customer);
-		
+
 		if (customer == null) {
 			customer = new Customer(customerID);
 			writeData(xid, customer.getKey(), customer);
+			//reset time last active of transaction
+			TransactionManager.resetTimeToLive(xid);
 			Trace.info("MW::newCustomer(" + xid + ", " + customerID + ") created a new customer");
 			return true;
 		} else {
@@ -422,9 +431,9 @@ public class Middleware implements IResourceManager, DataStore {
 
 		String key = Customer.getKey(customerID);
 		Customer customer = (Customer) readData(xid, key);
-		
+
 		TransactionNode.beforeWriting(xid, key, customer);
-		
+
 		if (customer == null) {
 			Trace.warn("MW::deleteCustomer(" + xid + ", " + customerID + ") failed--customer doesn't exist");
 			return false;
@@ -447,6 +456,8 @@ public class Middleware implements IResourceManager, DataStore {
 
 			// Remove the customer from the storage
 			removeData(xid, customer.getKey());
+			//reset time last active of transaction
+			TransactionManager.resetTimeToLive(xid);
 			Trace.info("MW::deleteCustomer(" + xid + ", " + customerID + ") succeeded");
 			return true;
 		}
@@ -459,10 +470,10 @@ public class Middleware implements IResourceManager, DataStore {
 
 		// Validate xid
 		TransactionManager.validateXID(xid);
-		
+
 		// acquire write lock on flight
 		TransactionManager.writeLockFlight(xid, flightNum);
-		
+
 		// acquire write lock on customer
 		TransactionManager.writeLockCustomer(xid, customerID);
 
@@ -470,7 +481,7 @@ public class Middleware implements IResourceManager, DataStore {
 		Customer customer = getCustomer(xid, customerID);
 
 		TransactionNode.beforeWriting(xid, key, customer);
-		
+
 		// if customer does not exist, return -1
 		if (customer == null)
 			return -1;
@@ -491,23 +502,24 @@ public class Middleware implements IResourceManager, DataStore {
 	}
 
 	// Adds car reservation to this customer
-	public int reserveCar(int xid, int customerID, String location) throws RemoteException, InvalidTransactionException, TransactionAbortedException {
+	public int reserveCar(int xid, int customerID, String location)
+			throws RemoteException, InvalidTransactionException, TransactionAbortedException {
 		Trace.info("MW::reserveCar(" + xid + ", " + customerID + ", " + location + ") called");
 
 		// Validate xid
 		TransactionManager.validateXID(xid);
-		
-		//acquire write lock on car
+
+		// acquire write lock on car
 		TransactionManager.writeLockCar(xid, location);
-		
-		//acquire write lock on customer
+
+		// acquire write lock on customer
 		TransactionManager.writeLockCustomer(xid, customerID);
-		
+
 		String key = Customer.getKey(customerID);
 		Customer customer = getCustomer(xid, customerID);
 
 		TransactionNode.beforeWriting(xid, key, customer);
-		
+
 		// if customer does not exist, return false
 		if (customer == null)
 			return -1;
@@ -515,7 +527,7 @@ public class Middleware implements IResourceManager, DataStore {
 		// return -1 if there is no connection to the resource manager
 		if (carsManager == null)
 			return -1;
-		
+
 		// if a car is successfully reserved return 0, otherwise -1
 		int carPrice = carsManager.reserveCar(xid, customerID, location);
 
@@ -529,23 +541,24 @@ public class Middleware implements IResourceManager, DataStore {
 	}
 
 	// Adds room reservation to this customer
-	public int reserveRoom(int xid, int customerID, String location) throws RemoteException, InvalidTransactionException, TransactionAbortedException {
+	public int reserveRoom(int xid, int customerID, String location)
+			throws RemoteException, InvalidTransactionException, TransactionAbortedException {
 		Trace.info("MW::reserveRoom(" + xid + ", " + customerID + ", " + location + ") called");
-		
+
 		// Validate xid
 		TransactionManager.validateXID(xid);
 
-		//get write lock on room
+		// get write lock on room
 		TransactionManager.writeLockRoom(xid, location);
-		
-		//get write lock on customer
+
+		// get write lock on customer
 		TransactionManager.writeLockCustomer(xid, customerID);
-		
+
 		String key = Customer.getKey(customerID);
 		Customer customer = getCustomer(xid, customerID);
 
 		TransactionNode.beforeWriting(xid, key, customer);
-		
+
 		// if customer does not exist, return false
 		if (customer == null)
 			return -1;
@@ -553,7 +566,7 @@ public class Middleware implements IResourceManager, DataStore {
 		// return -1 if there is no connection to the resource manager
 		if (roomsManager == null)
 			return -1;
-		
+
 		// if a room is successfully reserved return 0, otherwise -1
 		int roomPrice = roomsManager.reserveRoom(xid, customerID, location);
 		if (roomPrice != -1) {
@@ -882,12 +895,12 @@ public class Middleware implements IResourceManager, DataStore {
 
 	@Override
 	public boolean commit(int xid) throws RemoteException, InvalidTransactionException {
-		
+
 		Trace.info("MW::commit(" + xid + ") called");
 
 		// verify xid
 		TransactionManager.validateXID(xid);
-		
+
 		// send commit message to transaction manager
 		TransactionManager.commit(xid);
 
@@ -900,10 +913,10 @@ public class Middleware implements IResourceManager, DataStore {
 
 		// Validate xid
 		TransactionManager.validateXID(xid);
-		
+
 		// Send abort message to transaction manager
 		TransactionManager.abort(xid);
-		
+
 		return true;
 	}
 }

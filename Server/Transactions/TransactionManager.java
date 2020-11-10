@@ -44,6 +44,12 @@ public class TransactionManager {
 
 		// Create a new transaction object
 		activeTransactions.put(newXID, new Transaction(newXID));
+		
+		if (newXID == 1) {
+			//if first transaction then start timeThread
+			timeThread thread = new timeThread();
+			thread.start();
+		}
 
 		return newXID;
 	}
@@ -65,6 +71,8 @@ public class TransactionManager {
 			Trace.info("TransactionManager::setEditedCustomers() called on non-active transaction");
 		}
 	}
+	
+	
 	
 	public static void resetTimeToLive(int xid) {
 		// check if transaction is active
@@ -194,5 +202,9 @@ public class TransactionManager {
 	private static void handleDeadlock(int xid) throws TransactionAbortedException, RemoteException, InvalidTransactionException {
 		TransactionManager.abort(xid);
 		throw new TransactionAbortedException();
+	}
+	
+	public static HashMap<Integer, Transaction> getActiveTransactions(){
+		return activeTransactions;
 	}
 }
