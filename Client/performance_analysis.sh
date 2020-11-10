@@ -79,12 +79,22 @@ do
 		> /tmp/"client_$ID"_output	
 		#echo "===================================="
 		rm -f /tmp/"$TMP_TRANSACTION_FILE"
+	
 		
 		if [ "$IS_MULTI_CLIENT" = true ]
 		then
-			:
-			#TODO sleep
-		fi	
+			if (( NUM_OF_EXPERIMENTS / EXP_NUM == 1))
+			then
+				# sleep for x transactions per second
+				if (( $MILLISECONDS <= (1000/$NUM_OF_TRANSACTIONS) ))
+				then
+					sleep 0.$(( (1000/NUM_OF_TRANSACTIONS) - MILLISECONDS ))s
+				fi
+			else
+				# sleep for x transactions per y seconds
+				sleep $(( NUM_OF_EXPERIMENTS / NUM_OF_TRANSACTIONS ))s
+			fi	
+		fi
 
 		# increment transaction ID
 		TR_ID=$((TR_ID + 1))
