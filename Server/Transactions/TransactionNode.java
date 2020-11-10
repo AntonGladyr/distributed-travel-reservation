@@ -39,7 +39,7 @@ public class TransactionNode {
 		if (!alreadyWritten) {
 			Trace.info("RM::saving before-image (" + xid + ", " + objectKey + ")");
 			
-			ReservableItem objectClone = (ReservableItem) object.clone();
+			ReservableItem objectClone = object == null ? null : (ReservableItem) object.clone();
 			BeforeImage image = new BeforeImage(objectKey, objectClone);
 			imageList.add(image);
 		}
