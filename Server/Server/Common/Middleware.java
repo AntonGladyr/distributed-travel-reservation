@@ -7,6 +7,7 @@ package Server.Common;
 
 import Server.Interface.*;
 import Transactions.TransactionManager;
+import Transactions.TransactionNode;
 
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
@@ -369,6 +370,8 @@ public class Middleware implements IResourceManager {
 
 		// WRITE lock
 		TransactionManager.writeLockCustomer(xid, cid);
+		
+		TransactionNode.beforeWriting(xid, Customer.getKey(cid), null);
 
 		Customer customer = new Customer(cid);
 
@@ -388,7 +391,11 @@ public class Middleware implements IResourceManager {
 		// WRITE lock
 		TransactionManager.writeLockCustomer(xid, customerID);
 
-		Customer customer = (Customer) readData(xid, Customer.getKey(customerID));
+		String key = Customer.getKey(customerID);
+		Customer customer = (Customer) readData(xid, key);
+		
+		TransactionNode.beforeWriting(xid, key, customer);
+		
 		if (customer == null) {
 			customer = new Customer(customerID);
 			writeData(xid, customer.getKey(), customer);
@@ -410,7 +417,11 @@ public class Middleware implements IResourceManager {
 		// WRITE lock
 		TransactionManager.writeLockCustomer(xid, customerID);
 
-		Customer customer = (Customer) readData(xid, Customer.getKey(customerID));
+		String key = Customer.getKey(customerID);
+		Customer customer = (Customer) readData(xid, key);
+		
+		TransactionNode.beforeWriting(xid, key, customer);
+		
 		if (customer == null) {
 			Trace.warn("MW::deleteCustomer(" + xid + ", " + customerID + ") failed--customer doesn't exist");
 			return false;
@@ -445,8 +456,18 @@ public class Middleware implements IResourceManager {
 
 		// Validate xid
 		TransactionManager.validateXID(xid);
+		
+		// acquire write lock on flight
+		TransactionManager.writeLockFlight(xid, flightNum);
+		
+		// acquire write lock on customer
+		TransactionManager.writeLockCustomer(xid, customerID);
 
+		String key = Customer.getKey(customerID);
 		Customer customer = getCustomer(xid, customerID);
+
+		TransactionNode.beforeWriting(xid, key, customer);
+		
 		// if customer does not exist, return -1
 		if (customer == null)
 			return -1;
@@ -455,14 +476,9 @@ public class Middleware implements IResourceManager {
 		if (flightsManager == null)
 			return -1;
 
-		// acquire write lock on flight
-		TransactionManager.writeLockFlight(xid, flightNum);
-
 		// if a flight is successfully reserved return 0, otherwise -1
 		int flightPrice = flightsManager.reserveFlight(xid, customerID, flightNum);
 		if (flightPrice != -1) {
-			// acquire write lock on customer
-			TransactionManager.writeLockCustomer(xid, customerID);
 			customer.reserve(Flight.getKey(flightNum), String.valueOf(flightNum), flightPrice);
 			writeData(xid, customer.getKey(), customer);
 			return 0;
@@ -477,8 +493,18 @@ public class Middleware implements IResourceManager {
 
 		// Validate xid
 		TransactionManager.validateXID(xid);
-
+		
+		//acquire write lock on car
+		TransactionManager.writeLockCar(xid, location);
+		
+		//acquire write lock on customer
+		TransactionManager.writeLockCustomer(xid, customerID);
+		
+		String key = Customer.getKey(customerID);
 		Customer customer = getCustomer(xid, customerID);
+
+		TransactionNode.beforeWriting(xid, key, customer);
+		
 		// if customer does not exist, return false
 		if (customer == null)
 			return -1;
@@ -486,15 +512,11 @@ public class Middleware implements IResourceManager {
 		// return -1 if there is no connection to the resource manager
 		if (carsManager == null)
 			return -1;
-		//acquire write lock on car
-		TransactionManager.writeLockCar(xid, location);
 		
 		// if a car is successfully reserved return 0, otherwise -1
 		int carPrice = carsManager.reserveCar(xid, customerID, location);
 
 		if (carPrice != -1) {
-			//acquire write lock on customer
-			TransactionManager.writeLockCustomer(xid, customerID);
 			customer.reserve(Car.getKey(location), location, carPrice);
 			writeData(xid, customer.getKey(), customer);
 			return carPrice;
@@ -509,9 +531,18 @@ public class Middleware implements IResourceManager {
 		
 		// Validate xid
 		TransactionManager.validateXID(xid);
+
+		//get write lock on room
+		TransactionManager.writeLockRoom(xid, location);
 		
+		//get write lock on customer
+		TransactionManager.writeLockCustomer(xid, customerID);
 		
+		String key = Customer.getKey(customerID);
 		Customer customer = getCustomer(xid, customerID);
+
+		TransactionNode.beforeWriting(xid, key, customer);
+		
 		// if customer does not exist, return false
 		if (customer == null)
 			return -1;
@@ -519,15 +550,10 @@ public class Middleware implements IResourceManager {
 		// return -1 if there is no connection to the resource manager
 		if (roomsManager == null)
 			return -1;
-
-		//get write lock on room
-		TransactionManager.writeLockRoom(xid, location);
 		
 		// if a room is successfully reserved return 0, otherwise -1
 		int roomPrice = roomsManager.reserveRoom(xid, customerID, location);
 		if (roomPrice != -1) {
-			//get write lock on customer
-			TransactionManager.writeLockCustomer(xid, customerID);
 			customer.reserve(Room.getKey(location), location, roomPrice);
 			writeData(xid, customer.getKey(), customer);
 			return roomPrice;
@@ -654,8 +680,12 @@ public class Middleware implements IResourceManager {
 		Future<Boolean> carFuture = CompletableFuture.completedFuture(true);
 		Future<Boolean> roomFuture = CompletableFuture.completedFuture(true);
 
-		// if customer does not exist, return false
+		String key = Customer.getKey(customerId);
 		Customer customer = getCustomer(xid, customerId);
+
+		TransactionNode.beforeWriting(xid, key, customer);
+
+		// if customer does not exist, return false
 		if (customer == null)
 			return false;
 

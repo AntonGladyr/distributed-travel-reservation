@@ -5,7 +5,7 @@
 
 package Server.Common;
 
-public class Customer extends RMItem
+public class Customer extends ReservableItem
 {
 	private static final long serialVersionUID = 1L;
 	private int m_ID;
@@ -13,7 +13,7 @@ public class Customer extends RMItem
 
 	public Customer(int id)
 	{
-		super();
+		super(Integer.valueOf(id).toString(), 0, 0);
 		m_reservations = new RMHashMap();
 		m_ID = id;
 	}

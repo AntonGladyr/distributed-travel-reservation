@@ -9,12 +9,14 @@ import Server.Interface.*;
 
 import java.util.*;
 import java.rmi.RemoteException;
-import Transactions.TransactionManager;
+import Transactions.TransactionNode;
 
 public class ResourceManager implements IResourceManager
 {
 	protected String m_name = "";
 	protected RMHashMap m_data = new RMHashMap();
+	
+	private static final String notImplementedHere = "Operation not implemented in ResourceManagers";
 
 	public ResourceManager(String p_name)
 	{
@@ -53,7 +55,11 @@ public class ResourceManager implements IResourceManager
 	protected boolean deleteItem(int xid, String key)
 	{
 		Trace.info("RM::deleteItem(" + xid + ", " + key + ") called");
+		
 		ReservableItem curObj = (ReservableItem)readData(xid, key);
+		
+		TransactionNode.beforeWriting(xid, key, curObj);
+		
 		// Check if there is such an item in the storage
 		if (curObj == null)
 		{
@@ -111,6 +117,9 @@ public class ResourceManager implements IResourceManager
 		
 		// Check if the item is available
 		ReservableItem item = (ReservableItem)readData(xid, key);
+
+		TransactionNode.beforeWriting(xid, key, item);
+		
 		if (item == null)
 		{
 			Trace.warn("RM::reserveItem(" + xid + ", " + customerID + ", " + key + ", " + location + ") failed--item doesn't exist");
@@ -138,10 +147,13 @@ public class ResourceManager implements IResourceManager
 	// NOTE: if flightPrice <= 0 and the flight already exists, it maintains its current price
 	public boolean addFlight(int xid, int flightNum, int flightSeats, int flightPrice) throws RemoteException, TransactionAbortedException, InvalidTransactionException
 	{
-//		TransactionManager.validateXID(xid);
-//		TransactionManager.writeLockFlight(xid, flightNum);
 		Trace.info("RM::addFlight(" + xid + ", " + flightNum + ", " + flightSeats + ", $" + flightPrice + ") called");
-		Flight curObj = (Flight)readData(xid, Flight.getKey(flightNum));
+		
+		String key = Flight.getKey(flightNum);
+		Flight curObj = (Flight)readData(xid, key);
+		
+		TransactionNode.beforeWriting(xid, key, curObj);
+		
 		if (curObj == null)
 		{
 			// Doesn't exist yet, add it
@@ -168,7 +180,12 @@ public class ResourceManager implements IResourceManager
 	public boolean addCars(int xid, String location, int count, int price) throws RemoteException
 	{
 		Trace.info("RM::addCars(" + xid + ", " + location + ", " + count + ", $" + price + ") called");
-		Car curObj = (Car)readData(xid, Car.getKey(location));
+
+		String key = Car.getKey(location);
+		Car curObj = (Car)readData(xid, key);
+		
+		TransactionNode.beforeWriting(xid, key, curObj);
+		
 		if (curObj == null)
 		{
 			// Car location doesn't exist yet, add it
@@ -195,7 +212,12 @@ public class ResourceManager implements IResourceManager
 	public boolean addRooms(int xid, String location, int count, int price) throws RemoteException
 	{
 		Trace.info("RM::addRooms(" + xid + ", " + location + ", " + count + ", $" + price + ") called");
-		Room curObj = (Room)readData(xid, Room.getKey(location));
+		
+		String key = Room.getKey(location);
+		Room curObj = (Room)readData(xid, key);
+		
+		TransactionNode.beforeWriting(xid, key, curObj);
+		
 		if (curObj == null)
 		{
 			// Room location doesn't exist yet, add it
@@ -218,28 +240,27 @@ public class ResourceManager implements IResourceManager
 	// Deletes flight
 	public boolean deleteFlight(int xid, int flightNum) throws RemoteException, TransactionAbortedException, InvalidTransactionException
 	{
-		TransactionManager.validateXID(xid);
-		TransactionManager.writeLockFlight(xid, flightNum);
+		// beforeWriting is in deleteItem
 		return deleteItem(xid, Flight.getKey(flightNum));
 	}
 
 	// Delete cars at a location
 	public boolean deleteCars(int xid, String location) throws RemoteException
 	{
+		// beforeWriting is in deleteItem
 		return deleteItem(xid, Car.getKey(location));
 	}
 
 	// Delete rooms at a location
 	public boolean deleteRooms(int xid, String location) throws RemoteException
 	{
+		// beforeWriting is in deleteItem
 		return deleteItem(xid, Room.getKey(location));
 	}
 
 	// Returns the number of empty seats in this flight
 	public int queryFlight(int xid, int flightNum) throws RemoteException, TransactionAbortedException, InvalidTransactionException
 	{
-//		TransactionManager.validateXID(xid);
-//		TransactionManager.readLockFlight(xid, flightNum);
 		return queryNum(xid, Flight.getKey(flightNum));
 	}
 
@@ -258,8 +279,6 @@ public class ResourceManager implements IResourceManager
 	// Returns price of a seat in this flight
 	public int queryFlightPrice(int xid, int flightNum) throws RemoteException, TransactionAbortedException, InvalidTransactionException
 	{
-//		TransactionManager.validateXID(xid);
-//		TransactionManager.readLockFlight(xid, flightNum);
 		return queryPrice(xid, Flight.getKey(flightNum));
 	}
 
@@ -277,99 +296,42 @@ public class ResourceManager implements IResourceManager
 
 	public String queryCustomerInfo(int xid, int customerID) throws RemoteException
 	{
-		Trace.info("RM::queryCustomerInfo(" + xid + ", " + customerID + ") called");
-		Customer customer = (Customer)readData(xid, Customer.getKey(customerID));
-		if (customer == null)
-		{
-			Trace.warn("RM::queryCustomerInfo(" + xid + ", " + customerID + ") failed--customer doesn't exist");
-			// NOTE: don't change this--WC counts on this value indicating a customer does not exist...
-			return "";
-		}
-		else
-		{
-			Trace.info("RM::queryCustomerInfo(" + xid + ", " + customerID + ")");
-			System.out.println(customer.getBill());
-			return customer.getBill();
-		}
+        throw new RemoteException(notImplementedHere);
 	}
 
 	public int newCustomer(int xid) throws RemoteException
 	{
-        	Trace.info("RM::newCustomer(" + xid + ") called");
-		// Generate a globally unique ID for the new customer
-		int cid = Integer.parseInt(String.valueOf(xid) +
-			String.valueOf(Calendar.getInstance().get(Calendar.MILLISECOND)) +
-			String.valueOf(Math.round(Math.random() * 100 + 1)));
-		Customer customer = new Customer(cid);
-		writeData(xid, customer.getKey(), customer);
-		Trace.info("RM::newCustomer(" + cid + ") returns ID=" + cid);
-		return cid;
+        throw new RemoteException(notImplementedHere);
 	}
 
 	public boolean newCustomer(int xid, int customerID) throws RemoteException
 	{
-		Trace.info("RM::newCustomer(" + xid + ", " + customerID + ") called");
-		Customer customer = (Customer)readData(xid, Customer.getKey(customerID));
-		if (customer == null)
-		{
-			customer = new Customer(customerID);
-			writeData(xid, customer.getKey(), customer);
-			Trace.info("RM::newCustomer(" + xid + ", " + customerID + ") created a new customer");
-			return true;
-		}
-		else
-		{
-			Trace.info("INFO: RM::newCustomer(" + xid + ", " + customerID + ") failed--customer already exists");
-			return false;
-		}
+        throw new RemoteException(notImplementedHere);
 	}
 
 	public boolean deleteCustomer(int xid, int customerID) throws RemoteException
 	{
-		Trace.info("RM::deleteCustomer(" + xid + ", " + customerID + ") called");
-		Customer customer = (Customer)readData(xid, Customer.getKey(customerID));
-		if (customer == null)
-		{
-			Trace.warn("RM::deleteCustomer(" + xid + ", " + customerID + ") failed--customer doesn't exist");
-			return false;
-		}
-		else
-		{            
-			// Increase the reserved numbers of all reservable items which the customer reserved. 
- 			RMHashMap reservations = customer.getReservations();
-			for (String reservedKey : reservations.keySet())
-			{        
-				ReservedItem reserveditem = customer.getReservedItem(reservedKey);
-				Trace.info("RM::deleteCustomer(" + xid + ", " + customerID + ") has reserved " + reserveditem.getKey() + " " +  reserveditem.getCount() +  " times");
-				ReservableItem item  = (ReservableItem)readData(xid, reserveditem.getKey());
-				Trace.info("RM::deleteCustomer(" + xid + ", " + customerID + ") has reserved " + reserveditem.getKey() + " which is reserved " +  item.getReserved() +  " times and is still available " + item.getCount() + " times");
-				item.setReserved(item.getReserved() - reserveditem.getCount());
-				item.setCount(item.getCount() + reserveditem.getCount());
-				writeData(xid, item.getKey(), item);
-			}
-
-			// Remove the customer from the storage
-			removeData(xid, customer.getKey());
-			Trace.info("RM::deleteCustomer(" + xid + ", " + customerID + ") succeeded");
-			return true;
-		}
+        throw new RemoteException(notImplementedHere);
 	}	
 
 	// Adds flight reservation to this customer
 	public int reserveFlight(int xid, int customerID, int flightNum) throws RemoteException
 	{
+		// beforeWriting is in reserveItem
 		return reserveItem(xid, customerID, Flight.getKey(flightNum), String.valueOf(flightNum));
 	}
 
 	// Adds car reservation to this customer
 	public int reserveCar(int xid, int customerID, String location) throws RemoteException
 	{
+		// beforeWriting is in reserveItem
 		return reserveItem(xid, customerID, Car.getKey(location), location);
 	}
 
 	// Adds room reservation to this customer
 	public int reserveRoom(int xid, int customerID, String location) throws RemoteException
 	{
+		// beforeWriting is in reserveItem
 		return reserveItem(xid, customerID, Room.getKey(location), location);
 	}
 
@@ -395,7 +357,7 @@ public class ResourceManager implements IResourceManager
 		Trace.info("RM::checkFlightList(" + xid + ", " + "[flightNumbers]" + ", " + location + ") called");	
 
 		boolean isAvailable = true;
-		// hashmap to check if we are trying to reserve more seats than avaiable in the same flight	
+		// hashmap to check if we are trying to reserve more seats than available in the same flight	
 		HashMap<Integer, Integer> availableSeatsMap = new HashMap<Integer, Integer>(); // <flight number, number of seats>
 		
 		// iterate through each flight number
@@ -460,7 +422,11 @@ public class ResourceManager implements IResourceManager
 		Trace.info("RM::cancelItemReservations(" + xid + ", HashMap<String, Integer>) called");
 		 
 		for (Map.Entry<String, Integer> entry : reservedKeysMap.entrySet()) {
+			
 			ReservableItem item  = (ReservableItem)readData(xid, entry.getKey());
+			
+			TransactionNode.beforeWriting(xid, entry.getKey(), item);
+			
 			if (item == null) continue;
 			item.setReserved(item.getReserved() - entry.getValue());
 			item.setCount(item.getCount() + entry.getValue());
@@ -494,4 +460,3 @@ public class ResourceManager implements IResourceManager
 		return false;
 	}
 }
- 
