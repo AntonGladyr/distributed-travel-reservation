@@ -1,2 +1,6 @@
-AddCustomerID,<xid>,500
-DeleteCustomer,<xid>,500
+AddFlight,<xid>,<FlightNumber>,100,100
+QueryFlightPrice,<xid>,<FlightNumber>
+QueryFlightPrice,<xid>,<FlightNumber>
+QueryFlightPrice,<xid>,<FlightNumber>
+QueryFlightPrice,<xid>,<FlightNumber>
+DeleteFlight,<xid>,<FlightNumber>
