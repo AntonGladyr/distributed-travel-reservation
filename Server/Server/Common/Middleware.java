@@ -26,17 +26,26 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.CancellationException;
 
 public class Middleware implements IResourceManager {
+	
 	// group number as unique identifier
 	private static final String s_rmiPrefix = "group_03_";
 	private static final int MAX_THREADS = 3;
 	private static final int WAIT_RESPONSE = 3;
 
+	// Host name of the machines running each resource manager
 	private String flightsHost;
 	private String carsHost;
 	private String roomsHost;
+	
 	private final String flightsServerName = "Flights";
 	private final String carsServerName = "Cars";
 	private final String roomsServerName = "Rooms";
+	
+	// Reference to each remote RMI resource manager
+	private IResourceManager flightsManager;
+	private IResourceManager carsManager;
+	private IResourceManager roomsManager;
+	
 	protected final int portNum = Port.getPort();
 
 	protected String m_name = "";
@@ -52,22 +61,14 @@ public class Middleware implements IResourceManager {
 		if (System.getSecurityManager() == null) {
 			System.setSecurityManager(new SecurityManager());
 		}
-	}
-
-	public String getFlightsHost() {
-		return flightsHost;
-	}
-
-	public String getCarsHost() {
-		return carsHost;
-	}
-
-	public String getRoomsHost() {
-		return roomsHost;
-	}
-
-	public int getPortNum() {
-		return portNum;
+		
+		// Initialize references to resource managers
+		flightsManager = connectServer(flightsHost, portNum, flightsServerName);
+		carsManager = connectServer(carsHost, portNum, carsServerName);
+		roomsManager = connectServer(roomsHost, portNum, roomsServerName);
+		
+		// Register the resource managers with the transaction manager
+		TransactionManager.registerResourceManagers(this, flightsManager, carsManager, roomsManager);
 	}
 
 	// Reads a data item
@@ -120,9 +121,8 @@ public class Middleware implements IResourceManager {
 		TransactionManager.writeLockFlight(xid, flightNum);
 //		Trace.info("here");
 
-		IResourceManager m_resourceManager = connectServer(flightsHost, portNum, flightsServerName);
-		if (m_resourceManager != null) {
-			return m_resourceManager.addFlight(xid, flightNum, flightSeats, flightPrice);
+		if (flightsManager != null) {
+			return flightsManager.addFlight(xid, flightNum, flightSeats, flightPrice);
 		} else {
 			Trace.warn("MW::addFlight(" + xid + ", " + flightNum + ", " + flightSeats + ", $" + flightPrice + ")"
 					+ "  could not connect to the resource manager server.");
@@ -143,9 +143,8 @@ public class Middleware implements IResourceManager {
 		// acquire write lock
 		TransactionManager.writeLockCar(xid, location);
 
-		IResourceManager m_resourceManager = connectServer(carsHost, portNum, carsServerName);
-		if (m_resourceManager != null) {
-			return m_resourceManager.addCars(xid, location, count, price);
+		if (carsManager != null) {
+			return carsManager.addCars(xid, location, count, price);
 		} else {
 			Trace.warn("MW::addCars(" + xid + ", " + location + ", " + count + ", $" + price + ")"
 					+ "  could not connect to the resource manager server.");
@@ -165,9 +164,8 @@ public class Middleware implements IResourceManager {
 		// acquire write lock
 		TransactionManager.writeLockRoom(xid, location);
 
-		IResourceManager m_resourceManager = connectServer(roomsHost, portNum, roomsServerName);
-		if (m_resourceManager != null) {
-			return m_resourceManager.addRooms(xid, location, count, price);
+		if (roomsManager != null) {
+			return roomsManager.addRooms(xid, location, count, price);
 		} else {
 			Trace.warn("MW::addRooms(" + xid + ", " + location + ", " + count + ", $" + price + ")"
 					+ "  could not connect to the resource manager server.");
@@ -183,9 +181,8 @@ public class Middleware implements IResourceManager {
 		TransactionManager.validateXID(xid);
 		TransactionManager.writeLockFlight(xid, flightNum);
 
-		IResourceManager m_resourceManager = connectServer(flightsHost, portNum, flightsServerName);
-		if (m_resourceManager != null) {
-			return m_resourceManager.deleteFlight(xid, flightNum);
+		if (flightsManager != null) {
+			return flightsManager.deleteFlight(xid, flightNum);
 		} else {
 			Trace.warn("MW::deleteFlight(" + xid + ", " + flightNum + ")"
 					+ "  could not connect to the resource manager server.");
@@ -203,9 +200,8 @@ public class Middleware implements IResourceManager {
 		// acquire write lock
 		TransactionManager.writeLockCar(xid, location);
 
-		IResourceManager m_resourceManager = connectServer(carsHost, portNum, carsServerName);
-		if (m_resourceManager != null) {
-			return m_resourceManager.deleteCars(xid, location);
+		if (carsManager != null) {
+			return carsManager.deleteCars(xid, location);
 		} else {
 			Trace.warn("MW::deleteCars(" + xid + ", " + location + ")"
 					+ "  could not connect to the resource manager server.");
@@ -223,9 +219,8 @@ public class Middleware implements IResourceManager {
 		// acquire write lock
 		TransactionManager.writeLockRoom(xid, location);
 
-		IResourceManager m_resourceManager = connectServer(roomsHost, portNum, roomsServerName);
-		if (m_resourceManager != null) {
-			return m_resourceManager.deleteRooms(xid, location);
+		if (roomsManager != null) {
+			return roomsManager.deleteRooms(xid, location);
 		} else {
 			Trace.warn("MW::deleteRooms(" + xid + ", " + location + ")"
 					+ "  could not connect to the resource manager server.");
@@ -242,9 +237,8 @@ public class Middleware implements IResourceManager {
 		// acquire read lock
 		TransactionManager.readLockFlight(xid, flightNum);
 
-		IResourceManager m_resourceManager = connectServer(flightsHost, portNum, flightsServerName);
-		if (m_resourceManager != null) {
-			return m_resourceManager.queryFlight(xid, flightNum);
+		if (flightsManager != null) {
+			return flightsManager.queryFlight(xid, flightNum);
 		} else {
 			Trace.warn("MW::queryFlight(" + xid + ", " + flightNum + ")"
 					+ "  could not connect to the resource manager server.");
@@ -262,9 +256,8 @@ public class Middleware implements IResourceManager {
 		// acquire read lock
 		TransactionManager.readLockCar(xid, location);
 
-		IResourceManager m_resourceManager = connectServer(carsHost, portNum, carsServerName);
-		if (m_resourceManager != null) {
-			return m_resourceManager.queryCars(xid, location);
+		if (carsManager != null) {
+			return carsManager.queryCars(xid, location);
 		} else {
 			Trace.warn("MW::queryCars(" + xid + ", " + location + ")"
 					+ "  could not connect to the resource manager server.");
@@ -282,9 +275,8 @@ public class Middleware implements IResourceManager {
 		// acquire read lock
 		TransactionManager.writeLockRoom(xid, location);
 
-		IResourceManager m_resourceManager = connectServer(roomsHost, portNum, roomsServerName);
-		if (m_resourceManager != null) {
-			return m_resourceManager.queryRooms(xid, location);
+		if (roomsManager != null) {
+			return roomsManager.queryRooms(xid, location);
 		} else {
 			Trace.warn("MW::queryRooms(" + xid + ", " + location + ")"
 					+ "  could not connect to the resource manager server.");
@@ -302,9 +294,8 @@ public class Middleware implements IResourceManager {
 		// acquire read lock
 		TransactionManager.readLockFlight(xid, flightNum);
 
-		IResourceManager m_resourceManager = connectServer(flightsHost, portNum, flightsServerName);
-		if (m_resourceManager != null) {
-			return m_resourceManager.queryFlightPrice(xid, flightNum);
+		if (flightsManager != null) {
+			return flightsManager.queryFlightPrice(xid, flightNum);
 		} else {
 			Trace.warn("MW::queryFlightPrice(" + xid + ", " + flightNum + ")"
 					+ "  could not connect to the resource manager server.");
@@ -322,9 +313,8 @@ public class Middleware implements IResourceManager {
 		// acquire read lock
 		TransactionManager.readLockCar(xid, location);
 
-		IResourceManager m_resourceManager = connectServer(carsHost, portNum, carsServerName);
-		if (m_resourceManager != null) {
-			return m_resourceManager.queryCarsPrice(xid, location);
+		if (carsManager != null) {
+			return carsManager.queryCarsPrice(xid, location);
 		} else {
 			Trace.warn("MW::queryCarsPrice(" + xid + ", " + location + ")"
 					+ "  could not connect to the resource manager server.");
@@ -342,9 +332,8 @@ public class Middleware implements IResourceManager {
 		// acquire read lock
 		TransactionManager.readLockRoom(xid, location);
 
-		IResourceManager m_resourceManager = connectServer(roomsHost, portNum, roomsServerName);
-		if (m_resourceManager != null) {
-			return m_resourceManager.queryRoomsPrice(xid, location);
+		if (roomsManager != null) {
+			return roomsManager.queryRoomsPrice(xid, location);
 		} else {
 			Trace.warn("MW::queryRoomsPrice(" + xid + ", " + location + ")"
 					+ "  could not connect to the resource manager server.");
@@ -466,12 +455,11 @@ public class Middleware implements IResourceManager {
 			return -1;
 
 		// return -1 if there is no connection to the resource manager
-		IResourceManager m_resourceManager = connectServer(flightsHost, portNum, flightsServerName);
-		if (m_resourceManager == null)
+		if (flightsManager == null)
 			return -1;
 
 		// if a flight is successfully reserved return 0, otherwise -1
-		int flightPrice = m_resourceManager.reserveFlight(xid, customerID, flightNum);
+		int flightPrice = flightsManager.reserveFlight(xid, customerID, flightNum);
 		if (flightPrice != -1) {
 			customer.reserve(Flight.getKey(flightNum), String.valueOf(flightNum), flightPrice);
 			writeData(xid, customer.getKey(), customer);
@@ -490,12 +478,11 @@ public class Middleware implements IResourceManager {
 			return -1;
 
 		// return -1 if there is no connection to the resource manager
-		IResourceManager m_resourceManager = connectServer(carsHost, portNum, carsServerName);
-		if (m_resourceManager == null)
+		if (carsManager == null)
 			return -1;
 
 		// if a car is successfully reserved return 0, otherwise -1
-		int carPrice = m_resourceManager.reserveCar(xid, customerID, location);
+		int carPrice = carsManager.reserveCar(xid, customerID, location);
 
 		if (carPrice != -1) {
 			customer.reserve(Car.getKey(location), location, carPrice);
@@ -515,12 +502,11 @@ public class Middleware implements IResourceManager {
 			return -1;
 
 		// return -1 if there is no connection to the resource manager
-		IResourceManager m_resourceManager = connectServer(roomsHost, portNum, roomsServerName);
-		if (m_resourceManager == null)
+		if (roomsManager == null)
 			return -1;
 
 		// if a room is successfully reserved return 0, otherwise -1
-		int roomPrice = m_resourceManager.reserveRoom(xid, customerID, location);
+		int roomPrice = roomsManager.reserveRoom(xid, customerID, location);
 		if (roomPrice != -1) {
 			customer.reserve(Room.getKey(location), location, roomPrice);
 			writeData(xid, customer.getKey(), customer);
@@ -586,10 +572,9 @@ public class Middleware implements IResourceManager {
 		if (!flightNumbers.isEmpty()) {
 			Callable<Boolean> checkFlightsCallback = () -> {
 				Trace.info("MW::checkFlightList(" + xid + ", " + flightNumbers + ", " + location + ") called");
-				IResourceManager m_resourceManager = connectServer(flightsHost, portNum, flightsServerName);
-				if (m_resourceManager == null)
+				if (flightsManager == null)
 					return false;
-				return m_resourceManager.checkFlightList(xid, flightNumbers, location);
+				return flightsManager.checkFlightList(xid, flightNumbers, location);
 			};
 
 			// create thread for reserving list flight
@@ -662,11 +647,10 @@ public class Middleware implements IResourceManager {
 				Trace.info("MW::reserveFlightList(" + xid + ", " + customerId + ", " + flightNumbers + ", " + location
 						+ ") called");
 
-				IResourceManager m_resourceManager = connectServer(flightsHost, portNum, flightsServerName);
-				if (m_resourceManager == null)
+				if (flightsManager == null)
 					return false;
 
-				Vector<Integer> prices = m_resourceManager.reserveFlightList(xid, customerId, flightNumbers, location);
+				Vector<Integer> prices = flightsManager.reserveFlightList(xid, customerId, flightNumbers, location);
 				if (prices.isEmpty())
 					return false;
 
@@ -736,15 +720,12 @@ public class Middleware implements IResourceManager {
 		ExecutorService executor = Executors.newFixedThreadPool(MAX_THREADS);
 
 		// get the references to the remote objects
-		IResourceManager flightsManager = connectServer(flightsHost, portNum, flightsServerName);
 		if (flightsManager == null)
 			return false;
 
-		IResourceManager carsManager = connectServer(carsHost, portNum, carsServerName);
 		if (carsManager == null)
 			return false;
 
-		IResourceManager roomsManager = connectServer(roomsHost, portNum, roomsServerName);
 		if (roomsManager == null)
 			return false;
 

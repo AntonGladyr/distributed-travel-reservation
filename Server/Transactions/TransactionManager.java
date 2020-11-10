@@ -3,8 +3,8 @@ package Transactions;
 import java.rmi.RemoteException;
 import java.util.HashMap;
 
-import Server.Common.ResourceManager;
 import Server.Common.Trace;
+import Server.Interface.IResourceManager;
 import Server.Interface.InvalidTransactionException;
 import Server.Interface.TransactionAbortedException;
 import Server.LockManager.DeadlockException;
@@ -18,6 +18,21 @@ public class TransactionManager {
 	private static HashMap<Integer, Transaction> activeTransactions = new HashMap<Integer, Transaction>(); // keeps track of active transactions
 
 	private static LockManager lockManager = new LockManager();
+
+	// References to the resource managers
+	private static IResourceManager customersManager;
+	private static IResourceManager flightsManager;
+	private static IResourceManager carsManager;
+	private static IResourceManager roomsManager;
+	
+	// Saves references to all the resource managers
+	public static void registerResourceManagers(IResourceManager customersManager, IResourceManager flightsManager, IResourceManager carsManager,
+			IResourceManager roomsManager) {
+		TransactionManager.customersManager = customersManager;
+		TransactionManager.flightsManager = flightsManager;
+		TransactionManager.carsManager = carsManager;
+		TransactionManager.roomsManager = roomsManager;
+	}
 
 	// Starts a new transaction and returns its xid
 	public static int start() {
@@ -35,7 +50,7 @@ public class TransactionManager {
 		return newXID;
 	}
 
-	public void addRMtoT(int xid, ResourceManager resourceManager) {
+	public static void addRMtoT(int xid, IResourceManager resourceManager) {
 		// check if transaction is active
 		if (activeTransactions.containsKey(xid)) {
 			activeTransactions.get(xid).addRM(resourceManager); // add RM to transaction
@@ -44,12 +59,12 @@ public class TransactionManager {
 		}
 	}
 	
-	public void resetTimeToLive(int xid) {
+	public static void resetTimeToLive(int xid) {
 		// check if transaction is active
 				if (activeTransactions.containsKey(xid)) {
 					activeTransactions.get(xid).resetTimeToLive(); 
 				} else {
-					Trace.info("TransactionManager::aresetTimeToLive() trying to reset time to live of non-active transaction");
+					Trace.info("TransactionManager::resetTimeToLive() trying to reset time to live of non-active transaction");
 				}
 	}
 
@@ -59,6 +74,7 @@ public class TransactionManager {
 	public static void readLockCustomer(int xid, int customerID) throws TransactionAbortedException {
 		try {
 			lockManager.Lock(xid, "customer-" + customerID, TransactionLockObject.LockType.LOCK_READ);
+			addRMtoT(xid, customersManager);
 		} catch (DeadlockException e) {
 			handleDeadlock(xid);
 		}
@@ -68,6 +84,7 @@ public class TransactionManager {
 	public static void writeLockCustomer(int xid, int customerID) throws TransactionAbortedException {
 		try {
 			lockManager.Lock(xid, "customer-" + customerID, TransactionLockObject.LockType.LOCK_WRITE);
+			addRMtoT(xid, customersManager);
 		} catch (DeadlockException e) {
 			handleDeadlock(xid);
 		}
@@ -77,6 +94,7 @@ public class TransactionManager {
 	public static void readLockFlight(int xid, int flightNumber) throws TransactionAbortedException {
 		try {
 			lockManager.Lock(xid, "flight-" + flightNumber, TransactionLockObject.LockType.LOCK_READ);
+			addRMtoT(xid, flightsManager);
 		} catch (DeadlockException e) {
 			handleDeadlock(xid);
 		}
@@ -86,6 +104,7 @@ public class TransactionManager {
 	public static void writeLockFlight(int xid, int flightNumber) throws TransactionAbortedException {
 		try {
 			lockManager.Lock(xid, "flight-" + flightNumber, TransactionLockObject.LockType.LOCK_WRITE);
+			addRMtoT(xid, flightsManager);
 		} catch (DeadlockException e) {
 			handleDeadlock(xid);
 		}
@@ -95,6 +114,7 @@ public class TransactionManager {
 	public static void readLockCar(int xid, String location) throws TransactionAbortedException {
 		try {
 			lockManager.Lock(xid, "car-" + location, TransactionLockObject.LockType.LOCK_READ);
+			addRMtoT(xid, carsManager);
 		} catch (DeadlockException e) {
 			handleDeadlock(xid);
 		}
@@ -104,6 +124,7 @@ public class TransactionManager {
 	public static void writeLockCar(int xid, String location) throws TransactionAbortedException {
 		try {
 			lockManager.Lock(xid, "car-" + location, TransactionLockObject.LockType.LOCK_WRITE);
+			addRMtoT(xid, carsManager);
 		} catch (DeadlockException e) {
 			handleDeadlock(xid);
 		}
@@ -113,6 +134,7 @@ public class TransactionManager {
 	public static void readLockRoom(int xid, String location) throws TransactionAbortedException {
 		try {
 			lockManager.Lock(xid, "room-" + location, TransactionLockObject.LockType.LOCK_READ);
+			addRMtoT(xid, roomsManager);
 		} catch (DeadlockException e) {
 			handleDeadlock(xid);
 		}
@@ -122,6 +144,7 @@ public class TransactionManager {
 	public static void writeLockRoom(int xid, String location) throws TransactionAbortedException {
 		try {
 			lockManager.Lock(xid, "room-" + location, TransactionLockObject.LockType.LOCK_WRITE);
+			addRMtoT(xid, roomsManager);
 		} catch (DeadlockException e) {
 			handleDeadlock(xid);
 		}
