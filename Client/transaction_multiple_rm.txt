@@ -1,0 +1,6 @@
+AddFlight,<xid>,1,100,100
+AddCars,<xid>,mtl,100,100
+QueryCarsPrice,<xid>,mtl
+AddRooms,<xid>,mtl,100,100
+QueryRoomsPrice,<xid>,mtl
+DeleteFlight,<xid>,1

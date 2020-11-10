@@ -1,0 +1,6 @@
+AddFlight,<xid>,<FlightNumber>,100,100
+QueryFlightPrice,<xid>,<FlightNumber>
+QueryFlightPrice,<xid>,<FlightNumber>
+QueryFlightPrice,<xid>,<FlightNumber>
+QueryFlightPrice,<xid>,<FlightNumber>
+DeleteFlight,<xid>,<FlightNumber>
