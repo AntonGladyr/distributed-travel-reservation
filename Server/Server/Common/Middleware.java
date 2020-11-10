@@ -31,11 +31,6 @@ public class Middleware implements IResourceManager {
 	private static final String s_rmiPrefix = "group_03_";
 	private static final int MAX_THREADS = 3;
 	private static final int WAIT_RESPONSE = 3;
-
-	// Host name of the machines running each resource manager
-	private String flightsHost;
-	private String carsHost;
-	private String roomsHost;
 	
 	private final String flightsServerName = "Flights";
 	private final String carsServerName = "Cars";
@@ -53,9 +48,6 @@ public class Middleware implements IResourceManager {
 
 	public Middleware(String p_name, String flightsHost, String carsHost, String roomsHost) {
 		m_name = p_name;
-		this.flightsHost = flightsHost;
-		this.carsHost = carsHost;
-		this.roomsHost = roomsHost;
 
 		// Set the security policy
 		if (System.getSecurityManager() == null) {
