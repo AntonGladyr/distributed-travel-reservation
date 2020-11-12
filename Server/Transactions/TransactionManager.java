@@ -179,6 +179,8 @@ public class TransactionManager {
 		
 		// Remove from active transactions list
 		activeTransactions.remove(xid);
+		
+		Trace.info("TransactionManager::transaction " + xid + " aborted");
 	}
 
 	public static void commit(int xid) throws RemoteException, InvalidTransactionException {
@@ -192,6 +194,8 @@ public class TransactionManager {
 		
 		// Remove from active transactions list
 		activeTransactions.remove(xid);
+
+		Trace.info("TransactionManager::transaction " + xid + " committed");
 	}
 	
 	// Checks whether the specified transaction exists and is still active
@@ -202,6 +206,9 @@ public class TransactionManager {
 
 	// Take steps to handle a deadlock when it occurs
 	private static void handleDeadlock(int xid) throws TransactionAbortedException, RemoteException, InvalidTransactionException {
+
+		Trace.info("TransactionManager::deadlock detected; aborting " + xid);
+		
 		TransactionManager.abort(xid);
 		throw new TransactionAbortedException();
 	}
