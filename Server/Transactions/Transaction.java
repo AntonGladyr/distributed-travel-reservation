@@ -9,7 +9,8 @@ import Server.Interface.InvalidTransactionException;
 public class Transaction {
 
 	int xid; // transaction id
-	long timeToLive = 20000; //20 seconds
+	// long timeToLive = 20000; // 20 seconds
+	long timeToLive = 120000; // 120 seconds = 2 minutes
 	long timeLastActive; 
 
 	private boolean accessedCustomers = false;
