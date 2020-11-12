@@ -99,9 +99,6 @@ public class Middleware implements IResourceManager, DataStore {
 		// Read customer object if it exists (and read lock it)
 		Customer customer = (Customer) readData(xid, Customer.getKey(customerID));
 
-		// reset time last active of transaction
-		TransactionManager.resetTimeToLive(xid);
-
 		if (customer == null) {
 			Trace.warn("MW::getCustomer(" + xid + ", " + customerID + ")  failed--customer doesn't exist");
 		}
@@ -358,8 +355,7 @@ public class Middleware implements IResourceManager, DataStore {
 			return "";
 		} else {
 			Trace.info("MW::queryCustomerInfo(" + xid + ", " + customerID + ")");
-			// reset time last active of transaction
-			TransactionManager.resetTimeToLive(xid);
+
 			System.out.println(customer.getBill());
 			return customer.getBill();
 		}
@@ -384,8 +380,6 @@ public class Middleware implements IResourceManager, DataStore {
 		Customer customer = new Customer(cid);
 
 		writeData(xid, customer.getKey(), customer);
-		// Reset time last active of transaction
-		TransactionManager.resetTimeToLive(xid);
 
 		Trace.info("MW::newCustomer(" + cid + ") returns ID=" + cid);
 		return cid;
@@ -409,8 +403,7 @@ public class Middleware implements IResourceManager, DataStore {
 		if (customer == null) {
 			customer = new Customer(customerID);
 			writeData(xid, customer.getKey(), customer);
-			//reset time last active of transaction
-			TransactionManager.resetTimeToLive(xid);
+
 			Trace.info("MW::newCustomer(" + xid + ", " + customerID + ") created a new customer");
 			return true;
 		} else {
@@ -456,8 +449,7 @@ public class Middleware implements IResourceManager, DataStore {
 
 			// Remove the customer from the storage
 			removeData(xid, customer.getKey());
-			//reset time last active of transaction
-			TransactionManager.resetTimeToLive(xid);
+
 			Trace.info("MW::deleteCustomer(" + xid + ", " + customerID + ") succeeded");
 			return true;
 		}

@@ -72,15 +72,14 @@ public class TransactionManager {
 		}
 	}
 	
-	
-	
 	public static void resetTimeToLive(int xid) {
 		// check if transaction is active
-				if (activeTransactions.containsKey(xid)) {
-					activeTransactions.get(xid).resetTimeToLive(); 
-				} else {
-					Trace.info("TransactionManager::resetTimeToLive() trying to reset time to live of non-active transaction");
-				}
+		if (activeTransactions.containsKey(xid)) {
+			activeTransactions.get(xid).resetTimeToLive();
+			Trace.info("TransactionManager::reset time-to-live of transaction " + xid);
+		} else {
+			Trace.info("TransactionManager::resetTimeToLive() trying to reset time to live of non-active transaction");
+		}
 	}
 
 	// ----------------------------------------------read/write lock methods------------------------------------------------------------------
@@ -200,8 +199,11 @@ public class TransactionManager {
 	
 	// Checks whether the specified transaction exists and is still active
 	public static void validateXID(int xid) throws InvalidTransactionException {
-		if (!activeTransactions.containsKey(xid))
-			throw new InvalidTransactionException();
+		
+		if (!activeTransactions.containsKey(xid)) throw new InvalidTransactionException();
+		
+		// If the transaction is valid, take this opportunity to reset its time-to-live (since this validation function is called with each operation)
+		else resetTimeToLive(xid);
 	}
 
 	// Take steps to handle a deadlock when it occurs
