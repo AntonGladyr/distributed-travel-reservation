@@ -8,7 +8,7 @@ import java.util.Vector;
 public class LockManager
 {
 	private static int TABLE_SIZE = 2039;
-	private static int DEADLOCK_TIMEOUT = 10000;
+	private static int DEADLOCK_TIMEOUT = 30000;
 
 	private static TPHashTable lockTable = new TPHashTable(LockManager.TABLE_SIZE);
 	private static TPHashTable stampTable = new TPHashTable(LockManager.TABLE_SIZE);
@@ -258,7 +258,11 @@ public class LockManager
 							
 							// If the other lock is from another transaction and it is a READ lock, we can't convert (conflict)
 							if (dataLockObject.getXId() != otherDataLock.getXId()
-									&& otherDataLock.getLockType() == TransactionLockObject.LockType.LOCK_READ) return true;
+									&& otherDataLock.getLockType() == TransactionLockObject.LockType.LOCK_READ) {
+
+								Trace.info("LM::lockConflict(" + dataLockObject.getXId() + ", " + dataLockObject.getDataName() + ") Want to convert READ to WRITE, but someone is sharing READ");
+								return true;
+							}
 						}
 						
 						// If we get to this point, there are no other shared READ locks. It is safe to convert.
