@@ -426,7 +426,7 @@ public class ResourceManager implements IResourceManager, DataStore {
 		Trace.info("Shutting down " + this.m_name);
 		try {
 			Trace.info("Naming.unbind param is: group_3_" + name);
-			Naming.unbind("group_03_" + m_name);
+			Naming.unbind("group_3_" + m_name);
 		} catch (MalformedURLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
