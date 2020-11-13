@@ -13,13 +13,13 @@ RMIInterface.jar: Server/Interface/*.java
 	javac Server/Interface/*.java
 	jar cvf RMIInterface.jar Server/Interface/*.class
 
-compile-server-rmi: Server/RMI/*.java Server/Interface/IResourceManager.java Server/Common/*.java	
-	javac Server/RMI/*.java Server/Interface/IResourceManager.java Server/Common/*.java
+compile-server-rmi: Server/RMI/*.java Server/Interface/IResourceManager.java Server/Common/*.java Server/LockManager/*.java
+	javac Server/RMI/*.java Server/Interface/IResourceManager.java Server/Common/*.java Server/LockManager/*.java
 	
 compile-server-tcp: Server/TCP/*.java Server/Interface/*.java Server/Common/*.java
 	javac Server/TCP/*.java Server/Interface/*.java Server/Common/*.java
 
 clean:
-	rm -f Server/Interface/*.class Server/Common/*.class Server/RMI/*.class Server/TCP/*.class
+	rm -f Server/Interface/*.class Server/Common/*.class Server/RMI/*.class Server/TCP/*.class Server/LockManager/*.class
 	rm -f RMIInterface.jar
 	rm -f java.policy 
