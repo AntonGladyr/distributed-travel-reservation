@@ -8,6 +8,7 @@ package Server.Common;
 import Server.Interface.*;
 
 import java.util.*;
+import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 
 import Transactions.TransactionManager;
@@ -418,7 +419,7 @@ public class ResourceManager implements IResourceManager, DataStore {
 	}
 
 	@Override
-	public void shutdown() throws RemoteException {
+	public void shutdown() throws RemoteException, NotBoundException {
 		// TODO Auto-generated method stub
 		
 	}

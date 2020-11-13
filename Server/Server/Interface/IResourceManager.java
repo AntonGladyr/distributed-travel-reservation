@@ -1,5 +1,6 @@
 package Server.Interface;
 
+import java.rmi.NotBoundException;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 
@@ -298,5 +299,5 @@ public interface IResourceManager extends Remote
     public String getName()
         throws RemoteException;
     
-    public void shutdown() throws RemoteException;
+    public void shutdown() throws RemoteException, NotBoundException;
 }

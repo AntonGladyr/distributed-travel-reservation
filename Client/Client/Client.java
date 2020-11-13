@@ -6,6 +6,7 @@ import java.util.*;
 import java.io.*;
 import java.rmi.RemoteException;
 import java.rmi.ConnectException;
+import java.rmi.NotBoundException;
 import java.rmi.ServerException;
 import java.rmi.UnmarshalException;
 
@@ -73,7 +74,7 @@ public abstract class Client
 		}
 	}
 
-	public void execute(Command cmd, Vector<String> arguments) throws RemoteException, NumberFormatException, InvalidTransactionException, TransactionAbortedException
+	public void execute(Command cmd, Vector<String> arguments) throws RemoteException, NumberFormatException, InvalidTransactionException, TransactionAbortedException, NotBoundException
 	{
 		switch (cmd)
 		{
@@ -485,6 +486,7 @@ public abstract class Client
 			case Shutdown:
 				checkArgumentsCount(1, arguments.size());
 				System.out.println("Shuting down...");
+				m_resourceManager.shutdown();
 				
 			case Quit:
 				checkArgumentsCount(1, arguments.size());
