@@ -425,7 +425,7 @@ public class ResourceManager implements IResourceManager, DataStore {
 	public void shutdown() throws RemoteException{
 		Trace.info("Shutting down " + this.m_name);
 		try {
-			Naming.unbind(m_name);
+			Naming.unbind("group_03_" + m_name);
 		} catch (MalformedURLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
