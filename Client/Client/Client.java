@@ -482,6 +482,10 @@ public abstract class Client
 				else System.out.println("Transaction abort failed");
 				break;
 			}
+			case Shutdown:
+				checkArgumentsCount(1, arguments.size());
+				System.out.println("Shuting down...");
+				
 			case Quit:
 				checkArgumentsCount(1, arguments.size());
 

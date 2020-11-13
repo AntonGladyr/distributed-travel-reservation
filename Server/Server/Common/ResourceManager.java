@@ -416,4 +416,10 @@ public class ResourceManager implements IResourceManager, DataStore {
 		TransactionNode.abort(xid);
 		return true;
 	}
+
+	@Override
+	public void shutdown() throws RemoteException {
+		// TODO Auto-generated method stub
+		
+	}
 }

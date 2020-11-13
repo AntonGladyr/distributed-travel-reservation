@@ -911,4 +911,17 @@ public class Middleware implements IResourceManager, DataStore {
 
 		return true;
 	}
+	
+	
+	public void shutdown() throws RemoteException, NotBoundException {
+		Trace.info("MW::shutdown called");
+		
+		//get flight registry
+		Registry registryFlight = LocateRegistry.getRegistry("flightsHost", portNum);
+		registryFlight.unbind("flightsHost");
+		
+		Trace.info("flights host shutdown");
+		
+		
+	}
 }
