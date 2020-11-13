@@ -2,6 +2,7 @@ package Transactions;
 
 import java.rmi.RemoteException;
 import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 import Server.Common.Trace;
 import Server.Interface.IResourceManager;
@@ -15,7 +16,7 @@ public class TransactionManager {
 
 	private static Integer transactionCounter = 0;
 
-	private static HashMap<Integer, Transaction> activeTransactions = new HashMap<Integer, Transaction>(); // keeps track of active transactions
+	private static ConcurrentHashMap<Integer, Transaction> activeTransactions = new ConcurrentHashMap<Integer, Transaction>(); // keeps track of active transactions
 
 	private static LockManager lockManager = new LockManager();
 
