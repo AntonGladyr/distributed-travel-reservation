@@ -14,6 +14,8 @@ import java.rmi.registry.Registry;
 
 import java.util.*;
 import java.rmi.RemoteException;
+import java.net.MalformedURLException;
+import java.rmi.Naming;
 import java.rmi.NotBoundException;
 
 import java.util.concurrent.Executors;
@@ -917,9 +919,14 @@ public class Middleware implements IResourceManager, DataStore {
 		Trace.info("MW::shutdown called");
 		
 		//get flight registry
-		Registry registryFlight = LocateRegistry.getRegistry("flightsManager", portNum);
-		registryFlight.unbind("flightsHost");
-		
+		//Registry registryFlight = LocateRegistry.getRegistry("flightsManager", portNum);
+		//registryFlight.unbind("flightsHost");
+		try {
+			Naming.unbind(flightsServerName);
+		} catch (MalformedURLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		Trace.info("flights host shutdown");
 		
 		
