@@ -8,8 +8,11 @@ package Server.Common;
 import Server.Interface.*;
 
 import java.util.*;
+import java.net.MalformedURLException;
+import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
+import java.rmi.server.UnicastRemoteObject;
 
 import Transactions.TransactionManager;
 import Transactions.TransactionNode;
@@ -421,7 +424,18 @@ public class ResourceManager implements IResourceManager, DataStore {
 	@Override
 	public void shutdown() throws RemoteException{
 		Trace.info("Shutting down " + this.m_name);
-		System.exit(0);
+		try {
+			Naming.unbind(m_name);
+		} catch (MalformedURLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (NotBoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		UnicastRemoteObject.unexportObject(this, true);
+		System.out.print("Shutting down " + this.m_name);
+		
 		
 	}
 }
