@@ -14,8 +14,6 @@ import java.rmi.registry.Registry;
 
 import java.util.*;
 import java.rmi.RemoteException;
-import java.net.MalformedURLException;
-import java.rmi.Naming;
 import java.rmi.NotBoundException;
 
 import java.util.concurrent.Executors;
@@ -957,24 +955,24 @@ public class Middleware implements IResourceManager, DataStore {
 		flightsManager.shutdown("Flights");
 		Trace.info("flights rm has been shutdown");
 		
-		try {
-			TimeUnit.SECONDS.sleep(3);
-		} catch (InterruptedException e) {
-			Trace.info("Failure with TimeUnit");
-			e.printStackTrace();
-		}
+//		try {
+//			TimeUnit.SECONDS.sleep(3);
+//		} catch (InterruptedException e) {
+//			Trace.info("Failure with TimeUnit");
+//			e.printStackTrace();
+//		}
 		
 		//shutdown rooms rm
 		Trace.info("Calling rooms to shutdown");
 		roomsManager.shutdown("Rooms");
 		Trace.info("rooms rm has been shutdown");
 		
-		try {
-			TimeUnit.SECONDS.sleep(3);
-		} catch (InterruptedException e) {
-			Trace.info("Failure with TimeUnit");
-			e.printStackTrace();
-		}
+//		try {
+//			TimeUnit.SECONDS.sleep(3);
+//		} catch (InterruptedException e) {
+//			Trace.info("Failure with TimeUnit");
+//			e.printStackTrace();
+//		}
 		
 		//shutdown cars rm
 		Trace.info("Calling cars to shutdown");

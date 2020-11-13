@@ -6,15 +6,11 @@
 package Server.Common;
 
 import Server.Interface.*;
+import Server.RMI.ShutdownThread;
 
 import java.util.*;
-import java.net.MalformedURLException;
-import java.rmi.Naming;
-import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
-import java.rmi.server.UnicastRemoteObject;
 
-import Transactions.TransactionManager;
 import Transactions.TransactionNode;
 
 public class ResourceManager implements IResourceManager, DataStore {
@@ -423,20 +419,25 @@ public class ResourceManager implements IResourceManager, DataStore {
 
 	@Override
 	public void shutdown(String name) throws RemoteException{
+		
 		Trace.info("Shutting down " + this.m_name);
-		try {
-			Trace.info("Naming.unbind param is: group_3_" + name);
-			Naming.unbind("group_3_" + m_name);
-		} catch (MalformedURLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (NotBoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		Trace.info("here");
-		UnicastRemoteObject.unexportObject(this, true);
-		Trace.info("here 2");
+		
+		ShutdownThread thread = new ShutdownThread();
+		thread.start();
+		
+//		try {
+//			Trace.info("Naming.unbind param is: group_3_" + name);
+//			Naming.unbind("group_3_" + m_name);
+//		} catch (MalformedURLException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		} catch (NotBoundException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+//		Trace.info("here");
+//		UnicastRemoteObject.unexportObject(this, true);
+//		Trace.info("here 2");
 		
 		
 	}
