@@ -59,7 +59,7 @@ def main():
 		#print(list(tr_load), list(time))
 
 	plt.ylabel('response time (ms)')
-	plt.xlabel('transactions per second')
+	plt.xlabel('workload')
 	
 	# Set a title
 	plt.title(args.name)

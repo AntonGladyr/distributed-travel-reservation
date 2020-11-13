@@ -1,6 +1,12 @@
-AddFlight,<xid>,1,100,100
+AddFlight,<xid>,<xid>,100,100
 AddCars,<xid>,mtl,100,100
-QueryCarsPrice,<xid>,mtl
 AddRooms,<xid>,mtl,100,100
+QueryFlight,<xid>,<xid>
+QueryCarsPrice,<xid>,mtl
 QueryRoomsPrice,<xid>,mtl
-DeleteFlight,<xid>,1
+AddCustomerID,<xid>,<xid>
+QueryCustomer,<xid>,<xid>
+ReserveFlight,<xid>,<xid>,<xid>
+ReserveCar,<xid>,<xid>,mtl
+ReserveRoom,<xid>,<xid>,mtl
+QueryCustomer,<xid>,<xid>
