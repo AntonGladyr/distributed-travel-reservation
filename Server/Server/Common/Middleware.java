@@ -922,7 +922,7 @@ public class Middleware implements IResourceManager, DataStore {
 		//Registry registryFlight = LocateRegistry.getRegistry("flightsManager", portNum);
 		//registryFlight.unbind("flightsHost");
 		try {
-			Naming.unbind(flightsServerName);
+			Naming.unbind("group_03_" + flightsServerName);
 		} catch (MalformedURLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
