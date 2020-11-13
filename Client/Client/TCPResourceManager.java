@@ -399,4 +399,10 @@ public class TCPResourceManager implements IResourceManager {
 	public void shutdown() {
 		
 	}
+
+	@Override
+	public void shutdown(String name) throws RemoteException {
+		// TODO Auto-generated method stub
+		
+	}
 }
