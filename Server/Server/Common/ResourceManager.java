@@ -359,7 +359,13 @@ public class ResourceManager implements IResourceManager, DataStore {
 			throws RemoteException {
 		Trace.info("RM::reserveFlightList(" + xid + ", " + customerId + ", " + "[flightNumbers]" + ", " + location
 				+ ") called");
-
+		
+		for (String flightNum : flightNumbers) {
+			String key = Flight.getKey(Integer.parseInt(flightNum));
+			Flight curObj = (Flight) readData(xid, key);
+			TransactionNode.beforeWriting(xid, key, curObj);
+		}
+		
 		Vector<Integer> flightPrices = new Vector<Integer>();
 
 		// iterate through each flight number and make a reservation
