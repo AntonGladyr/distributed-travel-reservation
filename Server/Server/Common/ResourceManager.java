@@ -6,11 +6,11 @@
 package Server.Common;
 
 import Server.Interface.*;
+import Server.RMI.ShutdownThread;
 
 import java.util.*;
 import java.rmi.RemoteException;
 
-import Transactions.TransactionManager;
 import Transactions.TransactionNode;
 
 public class ResourceManager implements IResourceManager, DataStore {
@@ -415,5 +415,14 @@ public class ResourceManager implements IResourceManager, DataStore {
 	public boolean abort(int xid) throws RemoteException {
 		TransactionNode.abort(xid);
 		return true;
+	}
+
+	@Override
+	public void shutdown() throws RemoteException{
+		
+		Trace.info("RM::Shutting down " + this.m_name);
+		
+		ShutdownThread thread = new ShutdownThread();
+		thread.start();
 	}
 }
