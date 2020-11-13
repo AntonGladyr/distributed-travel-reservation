@@ -949,7 +949,7 @@ public class Middleware implements IResourceManager, DataStore {
 	}
 	
 	
-	public void shutdown() throws RemoteException{
+	public void shutdown(String n) throws RemoteException{
 		Trace.info("MW::shutdown called");
 		
 		//shutdown flights rm

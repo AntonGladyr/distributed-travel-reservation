@@ -17,7 +17,7 @@ import java.rmi.server.UnicastRemoteObject;
 import Transactions.TransactionManager;
 import Transactions.TransactionNode;
 
-public abstract class ResourceManager implements IResourceManager, DataStore {
+public class ResourceManager implements IResourceManager, DataStore {
 	protected String m_name = "";
 	protected RMHashMap m_data = new RMHashMap();
 
