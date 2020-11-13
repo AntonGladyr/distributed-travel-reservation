@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.util.HashMap;
 import java.util.Vector;
@@ -392,5 +393,11 @@ public class TCPResourceManager implements IResourceManager {
 	@Override
 	public boolean abort(int xid) throws RemoteException {
 		throw new RemoteException(notImplemented);
+	}
+
+	@Override
+	public void shutdown() throws RemoteException, NotBoundException {
+		// TODO Auto-generated method stub
+		
 	}
 }
