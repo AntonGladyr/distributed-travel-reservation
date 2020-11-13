@@ -433,9 +433,9 @@ public class ResourceManager implements IResourceManager, DataStore {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		System.out.println("here");
+		Trace.info("here");
 		UnicastRemoteObject.unexportObject(this, true);
-		System.out.print("Shutting down " + this.m_name);
+		Trace.info("here 2");
 		
 		
 	}

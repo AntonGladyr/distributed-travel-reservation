@@ -953,14 +953,17 @@ public class Middleware implements IResourceManager, DataStore {
 		Trace.info("MW::shutdown called");
 		
 		//shutdown flights rm
+		Trace.info("Calling flights to shutdown");
 		flightsManager.shutdown();
 		Trace.info("flights rm has been shutdown");
 		
 		//shutdown rooms rm
+		Trace.info("Calling rooms to shutdown");
 		roomsManager.shutdown();
 		Trace.info("rooms rm has been shutdown");
 		
 		//shutdown cars rm
+		Trace.info("Calling cars to shutdown");
 		carsManager.shutdown();
 		Trace.info("rooms rm has been shutdown");
 	}
