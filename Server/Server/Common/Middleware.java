@@ -957,10 +957,24 @@ public class Middleware implements IResourceManager, DataStore {
 		flightsManager.shutdown("Flights");
 		Trace.info("flights rm has been shutdown");
 		
+		try {
+			TimeUnit.SECONDS.sleep(3);
+		} catch (InterruptedException e) {
+			Trace.info("Failure with TimeUnit");
+			e.printStackTrace();
+		}
+		
 		//shutdown rooms rm
 		Trace.info("Calling rooms to shutdown");
 		roomsManager.shutdown("Rooms");
 		Trace.info("rooms rm has been shutdown");
+		
+		try {
+			TimeUnit.SECONDS.sleep(3);
+		} catch (InterruptedException e) {
+			Trace.info("Failure with TimeUnit");
+			e.printStackTrace();
+		}
 		
 		//shutdown cars rm
 		Trace.info("Calling cars to shutdown");
