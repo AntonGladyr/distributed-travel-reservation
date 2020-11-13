@@ -29,8 +29,7 @@ public class ResourceManager implements IResourceManager, DataStore {
 	// Reads a data item
 	protected RMItem readData(int xid, String key) {
 		synchronized (m_data) {
-			//reset time last active of transaction
-			TransactionManager.resetTimeToLive(xid);
+
 			RMItem item = m_data.get(key);
 			if (item != null) {
 				return (RMItem) item.clone();
@@ -43,8 +42,6 @@ public class ResourceManager implements IResourceManager, DataStore {
 	public void writeData(int xid, String key, RMItem value) {
 		synchronized (m_data) {
 			m_data.put(key, value);
-			//reset time last active of transaction
-			TransactionManager.resetTimeToLive(xid);
 		}
 	}
 
@@ -52,8 +49,6 @@ public class ResourceManager implements IResourceManager, DataStore {
 	protected void removeData(int xid, String key) {
 		synchronized (m_data) {
 			m_data.remove(key);
-			//reset time last active of transaction
-			TransactionManager.resetTimeToLive(xid);
 		}
 	}
 
@@ -72,8 +67,7 @@ public class ResourceManager implements IResourceManager, DataStore {
 		} else {
 			if (curObj.getReserved() == 0) {
 				removeData(xid, curObj.getKey());
-				//reset time last active of transaction
-				TransactionManager.resetTimeToLive(xid);
+
 				Trace.info("RM::deleteItem(" + xid + ", " + key + ") item deleted");
 				return true;
 			} else {
@@ -104,8 +98,7 @@ public class ResourceManager implements IResourceManager, DataStore {
 		if (curObj != null) {
 			value = curObj.getPrice();
 		}
-		// reset time last active of transaction
-		TransactionManager.resetTimeToLive(xid);
+
 		Trace.info("RM::queryPrice(" + xid + ", " + key + ") returns cost=$" + value);
 		return value;
 	}
@@ -133,9 +126,6 @@ public class ResourceManager implements IResourceManager, DataStore {
 			item.setCount(item.getCount() - 1);
 			item.setReserved(item.getReserved() + 1);
 			writeData(xid, item.getKey(), item);
-			
-			//reset time last active of transaction
-			TransactionManager.resetTimeToLive(xid);
 			
 			Trace.info("RM::reserveItem(" + xid + ", " + customerID + ", " + key + ", " + location + ") succeeded");
 			return queryPrice(xid, key);
