@@ -302,4 +302,6 @@ public interface IResourceManager extends Remote
     
     public void shutdown()
     		throws RemoteException;
+
+	void shutdown(String name) throws RemoteException;
 }

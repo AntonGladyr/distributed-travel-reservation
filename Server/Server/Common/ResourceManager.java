@@ -17,7 +17,7 @@ import java.rmi.server.UnicastRemoteObject;
 import Transactions.TransactionManager;
 import Transactions.TransactionNode;
 
-public class ResourceManager implements IResourceManager, DataStore {
+public abstract class ResourceManager implements IResourceManager, DataStore {
 	protected String m_name = "";
 	protected RMHashMap m_data = new RMHashMap();
 
@@ -422,10 +422,10 @@ public class ResourceManager implements IResourceManager, DataStore {
 	}
 
 	@Override
-	public void shutdown() throws RemoteException{
+	public void shutdown(String name) throws RemoteException{
 		Trace.info("Shutting down " + this.m_name);
 		try {
-			Trace.info("Naming.unbind param is: group_3_" + m_data);
+			Trace.info("Naming.unbind param is: group_3_" + name);
 			Naming.unbind("group_03_" + m_name);
 		} catch (MalformedURLException e) {
 			// TODO Auto-generated catch block
