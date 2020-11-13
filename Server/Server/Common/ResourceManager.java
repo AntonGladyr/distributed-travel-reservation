@@ -419,8 +419,9 @@ public class ResourceManager implements IResourceManager, DataStore {
 	}
 
 	@Override
-	public void shutdown() throws RemoteException, NotBoundException {
-		// TODO Auto-generated method stub
+	public void shutdown() {
+		Trace.info("Shutting down " + this.m_name);
+		System.exit(0);
 		
 	}
 }

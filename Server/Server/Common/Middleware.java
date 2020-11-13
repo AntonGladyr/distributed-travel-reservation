@@ -574,12 +574,17 @@ public class Middleware implements IResourceManager, DataStore {
 
 	// Reserve bundle
 	public boolean bundle(int xid, int customerId, Vector<String> flightNumbers, String location, boolean car,
-			boolean room) throws RemoteException {
+			boolean room) throws RemoteException, InvalidTransactionException, TransactionAbortedException {
 		Trace.info("MW::bundle(" + xid + ", " + customerId + ", " + flightNumbers.toString() + "," + location + ", "
 				+ car + ", " + room + ") called");
 		if (flightNumbers.isEmpty())
 			return false;
 
+		// Validate xid
+		TransactionManager.validateXID(xid);
+
+
+		
 		boolean availabe = checkItemsAvailability(xid, customerId, flightNumbers, location, car, room);
 		if (availabe)
 			return reserveItemsBunlde(xid, customerId, flightNumbers, location, car, room);
@@ -605,7 +610,7 @@ public class Middleware implements IResourceManager, DataStore {
 
 	// check if items are available
 	private boolean checkItemsAvailability(int xid, int customerId, Vector<String> flightNumbers, String location,
-			boolean car, boolean room) throws RemoteException {
+			boolean car, boolean room) throws RemoteException, TransactionAbortedException, InvalidTransactionException {
 		Trace.info("MW::bundle[checkItemsAvailability](" + xid + ", " + customerId + ", " + flightNumbers.toString()
 				+ "," + location + ", " + car + ", " + room + ") called");
 		boolean flightsResult = true;
@@ -618,6 +623,9 @@ public class Middleware implements IResourceManager, DataStore {
 		Future<Boolean> carFuture = null;
 		Future<Boolean> roomFuture = null;
 
+		//get read lock on customer
+		TransactionManager.readLockCustomer(xid, customerId);
+		
 		// if customer does not exist, return false
 		Customer customer = getCustomer(xid, customerId);
 		if (customer == null)
@@ -626,6 +634,13 @@ public class Middleware implements IResourceManager, DataStore {
 		// send asynchronous requests to the resource managers
 
 		if (!flightNumbers.isEmpty()) {
+			
+			//get read lock on flights
+			for (String flightNum : flightNumbers) {
+				TransactionManager.readLockFlight(xid, Integer.parseInt(flightNum));
+			}
+			
+			
 			Callable<Boolean> checkFlightsCallback = () -> {
 				Trace.info("MW::checkFlightList(" + xid + ", " + flightNumbers + ", " + location + ") called");
 				if (flightsManager == null)
@@ -638,6 +653,8 @@ public class Middleware implements IResourceManager, DataStore {
 		}
 
 		if (car) {
+			
+			
 			// thread for reserving a car at a location
 			Callable<Boolean> checkCarCallback = () -> {
 				int amount = queryCars(xid, location);
@@ -676,10 +693,12 @@ public class Middleware implements IResourceManager, DataStore {
 
 	// reserve items
 	private boolean reserveItemsBunlde(int xid, int customerId, Vector<String> flightNumbers, String location,
-			boolean car, boolean room) throws RemoteException {
+			boolean car, boolean room) throws RemoteException, InvalidTransactionException, NumberFormatException, TransactionAbortedException {
 		Trace.info("MW::bundle[reserveItemsBunlde](" + xid + ", " + customerId + ", " + flightNumbers.toString() + ","
 				+ location + ", " + car + ", " + room + ") called");
 
+		TransactionManager.validateXID(xid);
+		
 		boolean flightsResult = true;
 		boolean carResult = true;
 		boolean roomResult = true;
@@ -703,6 +722,13 @@ public class Middleware implements IResourceManager, DataStore {
 
 		// check if the vector is empty
 		if (!flightNumbers.isEmpty()) {
+			
+			//get write lock for all flights
+			for (String flightNum : flightNumbers) {
+				TransactionManager.writeLockFlight(xid, Integer.parseInt(flightNum));
+			}
+			
+			
 			Callable<Boolean> reserveFlightsCallback = () -> {
 				Trace.info("MW::reserveFlightList(" + xid + ", " + customerId + ", " + flightNumbers + ", " + location
 						+ ") called");
@@ -728,6 +754,10 @@ public class Middleware implements IResourceManager, DataStore {
 		}
 
 		if (car) {
+			
+			//get write lock for car
+			TransactionManager.writeLockCar(xid, location);
+			
 			Callable<Boolean> reserveCarCallback = () -> {
 				Trace.info("MW::reserveCar(" + xid + ", " + customerId + ", " + location + ") called");
 
@@ -745,6 +775,10 @@ public class Middleware implements IResourceManager, DataStore {
 		}
 
 		if (room) {
+			
+			//get write lock for room
+			TransactionManager.writeLockRoom(xid, location);
+			
 			Callable<Boolean> reserveRoomCallback = () -> {
 				Trace.info("MW::reserveRoom(" + xid + ", " + customerId + ", " + location + ") called");
 
@@ -915,20 +949,19 @@ public class Middleware implements IResourceManager, DataStore {
 	}
 	
 	
-	public void shutdown() throws RemoteException, NotBoundException {
+	public void shutdown() {
 		Trace.info("MW::shutdown called");
 		
-		//get flight registry
-		//Registry registryFlight = LocateRegistry.getRegistry("flightsManager", portNum);
-		//registryFlight.unbind("flightsHost");
-		try {
-			Naming.unbind("group_03_" + flightsServerName);
-		} catch (MalformedURLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		Trace.info("flights host shutdown");
+		//shutdown flights rm
+		flightsManager.shutdown();
+		Trace.info("flights rm has been shutdown");
 		
+		//shutdown rooms rm
+		roomsManager.shutdown();
+		Trace.info("rooms rm has been shutdown");
 		
+		//shutdown cars rm
+		carsManager.shutdown();
+		Trace.info("rooms rm has been shutdown");
 	}
 }
