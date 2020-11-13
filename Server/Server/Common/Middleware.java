@@ -917,7 +917,7 @@ public class Middleware implements IResourceManager, DataStore {
 		Trace.info("MW::shutdown called");
 		
 		//get flight registry
-		Registry registryFlight = LocateRegistry.getRegistry("flightsHost", portNum);
+		Registry registryFlight = LocateRegistry.getRegistry("flightsManager", portNum);
 		registryFlight.unbind("flightsHost");
 		
 		Trace.info("flights host shutdown");
