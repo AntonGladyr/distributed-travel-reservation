@@ -32,7 +32,7 @@ public enum Command {
 	Start("Start a new transaction", ""),
 	Commit("Commit the specified transaction", "<xid>"),
 	Abort("Abort the specified transaction", "<xid>"),
-	Shutdown("Shutdown received", ""),
+	Shutdown("Shutdown all connected servers and exit the client", ""),
 
 	Quit("Exit the client application", "");
 

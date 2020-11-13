@@ -486,7 +486,7 @@ public abstract class Client
 			case Shutdown:
 				checkArgumentsCount(1, arguments.size());
 				System.out.println("Shuting down...");
-				m_resourceManager.shutdown("");
+				m_resourceManager.shutdown();
 				
 			case Quit:
 				checkArgumentsCount(1, arguments.size());

@@ -6,6 +6,7 @@
 package Server.Common;
 
 import Server.Interface.*;
+import Server.RMI.ShutdownThread;
 import Transactions.TransactionManager;
 import Transactions.TransactionNode;
 
@@ -947,36 +948,28 @@ public class Middleware implements IResourceManager, DataStore {
 	}
 	
 	
-	public void shutdown(String n) throws RemoteException{
+	public void shutdown() throws RemoteException{
 		Trace.info("MW::shutdown called");
 		
 		//shutdown flights rm
-		Trace.info("Calling flights to shutdown");
-		flightsManager.shutdown("Flights");
-		Trace.info("flights rm has been shutdown");
-		
-//		try {
-//			TimeUnit.SECONDS.sleep(3);
-//		} catch (InterruptedException e) {
-//			Trace.info("Failure with TimeUnit");
-//			e.printStackTrace();
-//		}
+		Trace.info("MW::Calling flights to shutdown");
+		flightsManager.shutdown();
+		Trace.info("MW::Flights rm has been shutdown");
 		
 		//shutdown rooms rm
-		Trace.info("Calling rooms to shutdown");
-		roomsManager.shutdown("Rooms");
-		Trace.info("rooms rm has been shutdown");
-		
-//		try {
-//			TimeUnit.SECONDS.sleep(3);
-//		} catch (InterruptedException e) {
-//			Trace.info("Failure with TimeUnit");
-//			e.printStackTrace();
-//		}
+		Trace.info("MW::Calling rooms to shutdown");
+		roomsManager.shutdown();
+		Trace.info("MW::Rooms rm has been shutdown");
 		
 		//shutdown cars rm
-		Trace.info("Calling cars to shutdown");
-		carsManager.shutdown("Cars");
-		Trace.info("rooms rm has been shutdown");
+		Trace.info("MW::Calling cars to shutdown");
+		carsManager.shutdown();
+		Trace.info("MW::Rooms rm has been shutdown");
+		
+		// Shutdown locally
+		Trace.info("MW::Shutting down " + this.m_name);
+		
+		ShutdownThread thread = new ShutdownThread();
+		thread.start();
 	}
 }

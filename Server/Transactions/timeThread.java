@@ -1,7 +1,6 @@
 package Transactions;
 
 import java.rmi.RemoteException;
-import java.util.Iterator;
 
 import Server.Common.Trace;
 import Server.Interface.InvalidTransactionException;

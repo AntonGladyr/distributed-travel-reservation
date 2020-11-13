@@ -418,27 +418,11 @@ public class ResourceManager implements IResourceManager, DataStore {
 	}
 
 	@Override
-	public void shutdown(String name) throws RemoteException{
+	public void shutdown() throws RemoteException{
 		
-		Trace.info("Shutting down " + this.m_name);
+		Trace.info("RM::Shutting down " + this.m_name);
 		
 		ShutdownThread thread = new ShutdownThread();
 		thread.start();
-		
-//		try {
-//			Trace.info("Naming.unbind param is: group_3_" + name);
-//			Naming.unbind("group_3_" + m_name);
-//		} catch (MalformedURLException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		} catch (NotBoundException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
-//		Trace.info("here");
-//		UnicastRemoteObject.unexportObject(this, true);
-//		Trace.info("here 2");
-		
-		
 	}
 }

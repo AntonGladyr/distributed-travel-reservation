@@ -1,7 +1,6 @@
 package Transactions;
 
 import java.rmi.RemoteException;
-import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
 
 import Server.Common.Trace;
