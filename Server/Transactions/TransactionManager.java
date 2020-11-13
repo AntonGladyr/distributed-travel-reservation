@@ -216,7 +216,7 @@ public class TransactionManager {
 		throw new TransactionAbortedException();
 	}
 	
-	public static HashMap<Integer, Transaction> getActiveTransactions(){
+	public static ConcurrentHashMap<Integer, Transaction> getActiveTransactions(){
 		return activeTransactions;
 	}
 }
