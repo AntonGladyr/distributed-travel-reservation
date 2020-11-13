@@ -419,7 +419,7 @@ public class ResourceManager implements IResourceManager, DataStore {
 	}
 
 	@Override
-	public void shutdown() {
+	public void shutdown() throws RemoteException{
 		Trace.info("Shutting down " + this.m_name);
 		System.exit(0);
 		
