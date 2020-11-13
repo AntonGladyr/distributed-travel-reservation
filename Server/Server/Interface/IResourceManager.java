@@ -237,9 +237,10 @@ public interface IResourceManager extends Remote
      *
      * @return Success
      * @throws InvalidTransactionException 
+     * @throws TransactionAbortedException 
      */
     public boolean bundle(int id, int customerID, Vector<String> flightNumbers, String location, boolean car, boolean room)
-	throws RemoteException, InvalidTransactionException; 
+	throws RemoteException, InvalidTransactionException, TransactionAbortedException; 
 
     /**
      * Check if the flight list is available

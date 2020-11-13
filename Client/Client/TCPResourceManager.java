@@ -396,8 +396,7 @@ public class TCPResourceManager implements IResourceManager {
 	}
 
 	@Override
-	public void shutdown() throws RemoteException, NotBoundException {
-		// TODO Auto-generated method stub
+	public void shutdown() {
 		
 	}
 }
