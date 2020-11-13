@@ -395,10 +395,6 @@ public class TCPResourceManager implements IResourceManager {
 		throw new RemoteException(notImplemented);
 	}
 
-	@Override
-	public void shutdown() {
-		
-	}
 
 	@Override
 	public void shutdown(String name) throws RemoteException {
