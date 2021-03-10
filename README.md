@@ -4,7 +4,7 @@ _This project is an adaption of the project of CSE 593 of the University of Wash
 
 The goal this project is to develop a component-based distributed information system using some of the fundamental components and algorithms for distribution, coordination, scalability, fault-tolerance, etc. The ultimate goal is a cohesive multi-client, multi-server implementation of a Travel Reservation system.
 
-The system allows customers to reserve flights, cars and rooms for their vacation. You can find more information about the client interface and explore the functionality in the _UserGuide.pdf_.
+The system allows customers to reserve flights, cars and rooms for their vacation. You can find more information about the client interface and explore the functionality in the _UserGuide.pdf_ and _GettingStarted.pdf_.
 
 # Usage
 
