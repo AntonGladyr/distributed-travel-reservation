@@ -1,12 +1,10 @@
-# comp512-project
+# Distributed Travel Reservation
 
-Distributed Systems project for COMP 512, McGill, Fall 2020.
+_This project is an adaption of the project of CSE 593 of the University of Washington._
 
-## Project Group #3
+The goal this project is to develop a component-based distributed information system using some of the fundamental components and algorithms for distribution, coordination, scalability, fault-tolerance, etc. The ultimate goal is a cohesive multi-client, multi-server implementation of a Travel Reservation system.
 
-* `Stacey Beard`:
-* `Melissa Dunn`: 260801146
-* `Anton Gladyr`: 260892882
+The system allows customers to reserve flights, cars and rooms for their vacation. You can find more information about the client interface and explore the functionality in the _UserGuide.pdf_.
 
 # Usage
 
